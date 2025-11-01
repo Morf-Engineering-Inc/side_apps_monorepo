@@ -1,0 +1,317 @@
+{
+  "id": "1020199d62a013c7eaca794458834c4f15b",
+  "version": "1020199d679a7e27630be631d86d72e8cf6",
+  "schema": {
+    "name": "daily_log_entry",
+    "description": "Stores daily performance tracking logs, with a unique entry per date, including psychological and skill development metrics.",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each daily log entry.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly accessible unique identifier."
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal user identifier."
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal user identifier."
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit timestamp."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit timestamp."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "date",
+        "description": "The specific date for the log entry. Each date must be unique.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "The date is a key part of the user's personal log."
+        },
+        "format": "date"
+      },
+      {
+        "name": "goals",
+        "description": "An array of three strings representing the main objectives for the day.",
+        "type": 101,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains user's personal goals and objectives."
+        },
+        "items": {
+          "description": "A single daily objective.",
+          "type": 1,
+          "taxonomy": {
+            "category": "Performance Metrics",
+            "subject": "Goals"
+          }
+        }
+      },
+      {
+        "name": "execution_notes",
+        "description": "Detailed notes on the execution of daily tasks and goals.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains detailed personal reflections and work notes."
+        },
+        "nullable": true
+      },
+      {
+        "name": "focus_rating",
+        "description": "A rating from 1 to 10 indicating the level of focus throughout the day.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Subjective personal performance metric."
+        },
+        "taxonomy": {
+          "category": "Performance Metrics",
+          "subject": "Focus"
+        }
+      },
+      {
+        "name": "energy_rating",
+        "description": "A rating from 1 to 10 indicating the energy level throughout the day.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Subjective personal performance metric."
+        },
+        "taxonomy": {
+          "category": "Performance Metrics",
+          "subject": "Energy"
+        }
+      },
+      {
+        "name": "difficulties",
+        "description": "A description of any challenges or difficulties faced during the day.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Details personal or professional challenges."
+        },
+        "nullable": true
+      },
+      {
+        "name": "performance_score",
+        "description": "An overall performance score for the day, rated from 1 to 10.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Overall subjective personal performance metric."
+        },
+        "taxonomy": {
+          "category": "Performance Metrics",
+          "subject": "Overall Performance"
+        }
+      },
+      {
+        "name": "win_lose",
+        "description": "A boolean value indicating if the day was considered a 'win' (true) or 'lose' (false).",
+        "type": 3,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Binary subjective assessment of the day's outcome."
+        }
+      },
+      {
+        "name": "reasoning",
+        "description": "Justification or reasoning behind the win/lose assessment.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains personal justification and reflection."
+        },
+        "nullable": true
+      },
+      {
+        "name": "improvement_notes",
+        "description": "Notes on potential improvements for future days.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains personal notes for self-improvement."
+        },
+        "nullable": true
+      },
+      {
+        "name": "motivation",
+        "description": "A rating from 1 to 5 indicating the level of motivation.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Subjective personal psychological metric."
+        },
+        "taxonomy": {
+          "category": "Psychological Metrics",
+          "subject": "Motivation"
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "anxiety",
+        "description": "A rating from 1 to 5 indicating the level of anxiety.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Subjective personal psychological metric."
+        },
+        "taxonomy": {
+          "category": "Psychological Metrics",
+          "subject": "Anxiety"
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "confidence",
+        "description": "A rating from 1 to 5 indicating the level of confidence.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Subjective personal psychological metric."
+        },
+        "taxonomy": {
+          "category": "Psychological Metrics",
+          "subject": "Confidence"
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "skills",
+        "description": "An array of strings listing skills developed or utilized during the day.",
+        "type": 101,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains user's personal skill development information."
+        },
+        "nullable": true,
+        "items": {
+          "description": "A single skill.",
+          "type": 1
+        }
+      },
+      {
+        "name": "strengths",
+        "description": "An array of strings listing personal strengths observed or utilized.",
+        "type": 101,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains user's personal assessment of their strengths."
+        },
+        "nullable": true,
+        "items": {
+          "description": "A single personal strength.",
+          "type": 1
+        }
+      },
+      {
+        "name": "scorecard",
+        "description": "A JSON object summarizing the day's wins and areas for improvement.",
+        "type": 102,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Contains a summary of personal achievements and learnings."
+        },
+        "inner": [
+          {
+            "name": "wins",
+            "description": "An array of up to three strings detailing the key wins of the day.",
+            "type": 101,
+            "compliance": {
+              "confidentiality": 3,
+              "reason": "Details specific personal achievements."
+            },
+            "items": {
+              "description": "A single win or achievement.",
+              "type": 1
+            }
+          },
+          {
+            "name": "needs_improvement",
+            "description": "Notes on areas that need improvement based on the day's experiences.",
+            "type": 1,
+            "compliance": {
+              "confidentiality": 3,
+              "reason": "Contains a key personal area for improvement."
+            }
+          }
+        ]
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "date"
+        ],
+        "unique": true,
+        "order": true
+      }
+    ]
+  },
+  "task": {
+    "id": "68eb211728d943f890989a85",
+    "root": "68eb0c3d756cd0854078e14b",
+    "project": "68eb0c3d756cd0854078e14a",
+    "user": "b851e330-1091-7016-5b29-9ae0aa43326d"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}

@@ -1,0 +1,202 @@
+{
+  "id": "102019a23cf05777f3283045656e2779179",
+  "version": "102019a27699e0f7060941f7dffce67a884",
+  "schema": {
+    "name": "voting_record",
+    "description": "A record of a specific politician's vote on a specific bill, acting as a junction entity.",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each voting record.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal system identifier."
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "politician_id",
+        "description": "The ID of the politician who cast the vote.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Foreign key to the politician entity."
+        }
+      },
+      {
+        "name": "bill_id",
+        "description": "The ID of the bill being voted on.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Foreign key to the bill entity."
+        }
+      },
+      {
+        "name": "vote_choice",
+        "description": "The politician's vote on the bill.",
+        "type": 100,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "enumeration": [
+          {
+            "value": "Unspecified"
+          },
+          {
+            "number": 1,
+            "value": "Yes"
+          },
+          {
+            "number": 2,
+            "value": "No"
+          },
+          {
+            "number": 3,
+            "value": "Abstain"
+          }
+        ]
+      },
+      {
+        "name": "date_recorded",
+        "description": "The date the vote was recorded, in 10-digit unix timestamp string.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "notes",
+        "description": "Optional notes or context about the specific vote.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal analysis data."
+        },
+        "nullable": true
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "politician_id"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "bill_id"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "bill_id",
+          "politician_id"
+        ],
+        "unique": true,
+        "order": false
+      }
+    ],
+    "relations": [
+      {
+        "referencing_fields": [
+          "politician_id"
+        ],
+        "referenced_entity": {
+          "name": "politician"
+        },
+        "referenced_fields": [
+          "id"
+        ],
+        "cascade": true
+      },
+      {
+        "referencing_fields": [
+          "bill_id"
+        ],
+        "referenced_entity": {
+          "name": "bill"
+        },
+        "referenced_fields": [
+          "id"
+        ],
+        "cascade": true
+      }
+    ]
+  },
+  "task": {
+    "id": "68ffd975a776938453c6e20b",
+    "root": "68feec8dcd635a6ece0a6396",
+    "project": "68feec8dcd635a6ece0a6395",
+    "user": "b851e330-1091-7016-5b29-9ae0aa43326d"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}

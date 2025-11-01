@@ -71,3 +71,10 @@ Thumbs.db
 out/
 .next/
 .nuxt/
+
+# CREAO.ai backups
+*.creao.bak
+*.creao.ts.bak
+
+# Zip files
+*.zip

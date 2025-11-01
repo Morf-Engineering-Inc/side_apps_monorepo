@@ -1,0 +1,216 @@
+{
+  "id": "102019a1f17fffb72f1a8377d92b04bfca5",
+  "version": "102019a3de49fa17c4ea387da27c6b3f200",
+  "schema": {
+    "name": "talk",
+    "description": "Stores information about individual LDS General Conference talks.",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each talk record.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Public key for data record."
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal user identifier."
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal user identifier."
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available creation time."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available update time."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "conference_url",
+        "description": "URL of the specific general conference session.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available URL."
+        }
+      },
+      {
+        "name": "talk_url",
+        "description": "Unique URL for the specific talk.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available URL, used as a unique identifier."
+        }
+      },
+      {
+        "name": "year",
+        "description": "The year the conference talk was given (1971-present).",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "taxonomy": {
+          "category": "Temporal",
+          "subject": "Conference Year"
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "month",
+        "description": "The month of the conference, represented as '04' for April or '10' for October.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "taxonomy": {
+          "category": "Temporal",
+          "subject": "Conference Month"
+        },
+        "pattern": "^(04|10)$"
+      },
+      {
+        "name": "title",
+        "description": "The title of the conference talk.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "speaker",
+        "description": "The name of the person who gave the talk.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "taxonomy": {
+          "category": "Personal",
+          "subject": "Speaker Name"
+        }
+      },
+      {
+        "name": "description",
+        "description": "A brief summary or description of the talk.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      },
+      {
+        "name": "session",
+        "description": "The specific session of the conference (e.g., 'Saturday Morning Session').",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      },
+      {
+        "name": "text",
+        "description": "The full text content of the talk.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "talk_url"
+        ],
+        "unique": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "month",
+          "year"
+        ],
+        "order": true
+      },
+      {
+        "fields": [
+          "speaker"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "title"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      }
+    ]
+  },
+  "task": {
+    "id": "69059abed7a8c0e91c950372",
+    "root": "68fdb6cd7faee3e1b79090cd",
+    "project": "68fdb6cd7faee3e1b79090cc",
+    "user": "b851e330-1091-7016-5b29-9ae0aa43326d"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}

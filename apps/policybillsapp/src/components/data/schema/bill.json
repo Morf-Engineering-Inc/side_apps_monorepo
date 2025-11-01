@@ -1,0 +1,269 @@
+{
+  "id": "102019a23ceb52675d681bc1d7bd69e7b39",
+  "version": "102019a23ceb5267525b7c8b01e15da51cb",
+  "schema": {
+    "name": "bill",
+    "description": "Represents a legislative bill, including its details, voting outcome, and issue category.",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each bill.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal system identifier."
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "bill_name",
+        "description": "The official name or title of the bill.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "bill_number",
+        "description": "The unique identifier for the bill (e.g., HR-1234, S-567).",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "year",
+        "description": "The year the bill was voted on.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "description",
+        "description": "A summary of the bill's purpose and content.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "issue_category",
+        "description": "The primary policy area the bill addresses.",
+        "type": 100,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "enumeration": [
+          {
+            "value": "Unspecified"
+          },
+          {
+            "number": 1,
+            "value": "Immigration"
+          },
+          {
+            "number": 2,
+            "value": "Healthcare"
+          },
+          {
+            "number": 3,
+            "value": "ClimateChange"
+          },
+          {
+            "number": 4,
+            "value": "NationalDebt"
+          },
+          {
+            "number": 5,
+            "value": "WarAuthorization"
+          },
+          {
+            "number": 6,
+            "value": "GunControl"
+          },
+          {
+            "number": 7,
+            "value": "Infrastructure"
+          },
+          {
+            "number": 8,
+            "value": "Abortion"
+          },
+          {
+            "number": 9,
+            "value": "SocialSecurity"
+          },
+          {
+            "number": 10,
+            "value": "CivilRights"
+          }
+        ]
+      },
+      {
+        "name": "final_yes_votes",
+        "description": "Total number of 'Yes' votes.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "final_no_votes",
+        "description": "Total number of 'No' votes.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "final_abstain_votes",
+        "description": "Total number of 'Abstain' votes.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "impact_rank",
+        "description": "A rank from 1-50 indicating the bill's pivotal importance. Null for non-pivotal bills.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal metric for sorting and analysis."
+        },
+        "nullable": true,
+        "minimum": 1,
+        "numeric": "int"
+      },
+      {
+        "name": "passed",
+        "description": "Indicates whether the bill was passed into law.",
+        "type": 3,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "date_voted",
+        "description": "The date the final vote was held, in 10-digit unix timestamp string.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "format": "timestamp"
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "bill_number"
+        ],
+        "unique": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "issue_category"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "impact_rank"
+        ],
+        "order": true
+      },
+      {
+        "fields": [
+          "year"
+        ],
+        "order": false
+      }
+    ]
+  },
+  "task": {
+    "id": "68feec8dcd635a6ece0a6396",
+    "root": "68feec8dcd635a6ece0a6396",
+    "project": "68feec8dcd635a6ece0a6395",
+    "user": "b851e330-1091-7016-5b29-9ae0aa43326d"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}

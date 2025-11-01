@@ -1,0 +1,211 @@
+{
+  "id": "102019a23cf057778efb62fdba9d55ddd06",
+  "version": "102019a27699e0f7060941f7dffce67a884",
+  "schema": {
+    "name": "politician",
+    "description": "Stores information about politicians, including their party, state, role, and service history.",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each politician.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal system identifier."
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "name",
+        "description": "The full name of the politician.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "party",
+        "description": "The political party affiliation (e.g., Republican, Democrat, Independent).",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "state",
+        "description": "The 2-letter code for the state the politician represents.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "pattern": "^[A-Z]{2}$"
+      },
+      {
+        "name": "role",
+        "description": "The legislative role of the politician.",
+        "type": 100,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "enumeration": [
+          {
+            "value": "Unspecified"
+          },
+          {
+            "number": 1,
+            "value": "Senator"
+          },
+          {
+            "number": 2,
+            "value": "Representative"
+          }
+        ]
+      },
+      {
+        "name": "years_of_service",
+        "description": "A JSON string representing the years or terms served by the politician.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      },
+      {
+        "name": "start_year",
+        "description": "The year the politician started their current or most recent term.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "numeric": "int"
+      },
+      {
+        "name": "end_year",
+        "description": "The year the politician ended their service. Null if currently serving.",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true,
+        "numeric": "int"
+      },
+      {
+        "name": "image_url",
+        "description": "URL to a photo of the politician.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      },
+      {
+        "name": "biography",
+        "description": "A brief biography or summary of the politician's career.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "state"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "party"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "role"
+        ],
+        "order": false
+      }
+    ]
+  },
+  "task": {
+    "id": "68ffd975a776938453c6e20b",
+    "root": "68feec8dcd635a6ece0a6396",
+    "project": "68feec8dcd635a6ece0a6395",
+    "user": "b851e330-1091-7016-5b29-9ae0aa43326d"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}

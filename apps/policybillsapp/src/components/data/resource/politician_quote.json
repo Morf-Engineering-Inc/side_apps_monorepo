@@ -1,0 +1,220 @@
+{
+  "id": "102019a23cf057872868fb2ebed61c1984d",
+  "version": "102019a27699e0f7060941f7dffce67a884",
+  "schema": {
+    "name": "politician_quote",
+    "description": "Stores quotes from politicians on various issues, linked to the politician who stated them.",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each quote.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal system identifier."
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal audit trail."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "politician_id",
+        "description": "The ID of the politician who made the statement.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Foreign key to the politician entity."
+        }
+      },
+      {
+        "name": "quote_text",
+        "description": "The full text of the quote.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        }
+      },
+      {
+        "name": "issue_category",
+        "description": "The policy area related to the quote.",
+        "type": 100,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information for categorization."
+        },
+        "enumeration": [
+          {
+            "value": "Unspecified"
+          },
+          {
+            "number": 1,
+            "value": "Immigration"
+          },
+          {
+            "number": 2,
+            "value": "Healthcare"
+          },
+          {
+            "number": 3,
+            "value": "ClimateChange"
+          },
+          {
+            "number": 4,
+            "value": "NationalDebt"
+          },
+          {
+            "number": 5,
+            "value": "WarAuthorization"
+          },
+          {
+            "number": 6,
+            "value": "GunControl"
+          },
+          {
+            "number": 7,
+            "value": "Infrastructure"
+          },
+          {
+            "number": 8,
+            "value": "Abortion"
+          },
+          {
+            "number": 9,
+            "value": "SocialSecurity"
+          },
+          {
+            "number": 10,
+            "value": "CivilRights"
+          }
+        ]
+      },
+      {
+        "name": "source",
+        "description": "The source where the quote was recorded (e.g., news article URL, interview name).",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information for citation."
+        }
+      },
+      {
+        "name": "date_stated",
+        "description": "The date the statement was made, in 10-digit unix timestamp string.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "context",
+        "description": "Optional context surrounding the quote for better understanding.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "Publicly available information."
+        },
+        "nullable": true
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "politician_id"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "issue_category",
+          "politician_id"
+        ],
+        "order": false
+      }
+    ],
+    "relations": [
+      {
+        "referencing_fields": [
+          "politician_id"
+        ],
+        "referenced_entity": {
+          "name": "politician"
+        },
+        "referenced_fields": [
+          "id"
+        ],
+        "cascade": true
+      }
+    ]
+  },
+  "task": {
+    "id": "68ffd975a776938453c6e20b",
+    "root": "68feec8dcd635a6ece0a6396",
+    "project": "68feec8dcd635a6ece0a6395",
+    "user": "b851e330-1091-7016-5b29-9ae0aa43326d"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}
