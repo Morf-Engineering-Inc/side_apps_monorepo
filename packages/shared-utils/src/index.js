@@ -12,7 +12,7 @@ function formatDate(date = new Date()) {
  * @returns {string} Unique identifier
  */
 function generateId() {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**

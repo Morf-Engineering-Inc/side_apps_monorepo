@@ -28,7 +28,7 @@ jobs:
         run: pnpm install
 
       - name: Check formatting
-        run: pnpm format --check
+        run: pnpm prettier --check "**/*.{js,ts,jsx,tsx,json,md}"
 
   build-apps:
     name: Build Applications
