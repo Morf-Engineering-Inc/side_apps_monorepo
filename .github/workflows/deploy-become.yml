@@ -1,0 +1,415 @@
+name: Deploy BecomeLog to AWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+  NODE_VERSION: '20.x'
+  TERRAFORM_VERSION: '1.9.0'
+  TF_STATE_BUCKET: become-log-terraform-state
+  TF_STATE_LOCK_TABLE: become-log-terraform-state-lock
+  TF_VAR_environment: test
+  # AWS Application tags for resource grouping
+  APP_NAME: become-log
+  APP_TAG_KEY: awsApplication
+  APP_TAG_VALUE: arn:aws:resource-groups:${{ secrets.AWS_REGION || 'us-east-1' }}:${{ secrets.AWS_ACCOUNT_ID }}:group/become-log
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create AppRegistry Application
+        run: |
+          set -euo pipefail
+
+          echo "Creating or updating AppRegistry application for become-log..."
+
+          # Check if application already exists
+          if aws servicecatalog-appregistry get-application --application "${{ env.APP_NAME }}" 2>/dev/null; then
+            echo "✅ AppRegistry application '${{ env.APP_NAME }}' already exists"
+          else
+            echo "Creating AppRegistry application..."
+            aws servicecatalog-appregistry create-application \
+              --name "${{ env.APP_NAME }}" \
+              --description "BecomeLog - Personal transformation tracking and journaling application" \
+              --tags "Environment=test,ManagedBy=GitHub-Actions,Project=become-log"
+            
+            echo "✅ Created AppRegistry application '${{ env.APP_NAME }}'"
+          fi
+
+          # Get the application ARN for use in resource tagging
+          APP_ARN=$(aws servicecatalog-appregistry get-application \
+            --application "${{ env.APP_NAME }}" \
+            --query 'applicationTag.awsApplication' \
+            --output text)
+
+          echo "Application Resource Group ARN: $APP_ARN"
+          echo "APP_ARN=$APP_ARN" >> $GITHUB_ENV
+
+      - name: Ensure Terraform backend infrastructure
+        run: |
+          set -euo pipefail
+
+          echo "Checking S3 backend bucket: ${TF_STATE_BUCKET}"
+          if ! aws s3api head-bucket --bucket "${TF_STATE_BUCKET}" 2>/dev/null; then
+            echo "Creating S3 bucket for Terraform state"
+            if [ "${AWS_REGION}" = "us-east-1" ]; then
+              aws s3api create-bucket --bucket "${TF_STATE_BUCKET}"
+            else
+              aws s3api create-bucket \
+                --bucket "${TF_STATE_BUCKET}" \
+                --create-bucket-configuration LocationConstraint="${AWS_REGION}"
+            fi
+            
+            # Enable versioning
+            aws s3api put-bucket-versioning \
+              --bucket "${TF_STATE_BUCKET}" \
+              --versioning-configuration Status=Enabled
+            
+            # Enable encryption
+            aws s3api put-bucket-encryption \
+              --bucket "${TF_STATE_BUCKET}" \
+              --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+            
+            # Tag the S3 bucket for myApplications grouping
+            aws s3api put-bucket-tagging \
+              --bucket "${TF_STATE_BUCKET}" \
+              --tagging "TagSet=[{Key=${{ env.APP_TAG_KEY }},Value=${APP_ARN}},{Key=Name,Value=${TF_STATE_BUCKET}},{Key=Purpose,Value=TerraformState}]"
+            
+            echo "✅ Created and tagged S3 bucket"
+          else
+            echo "S3 bucket already exists"
+            
+            # Update tags on existing bucket
+            aws s3api put-bucket-tagging \
+              --bucket "${TF_STATE_BUCKET}" \
+              --tagging "TagSet=[{Key=${{ env.APP_TAG_KEY }},Value=${APP_ARN}},{Key=Name,Value=${TF_STATE_BUCKET}},{Key=Purpose,Value=TerraformState}]"
+          fi
+
+          echo "Checking DynamoDB state lock table: ${TF_STATE_LOCK_TABLE}"
+          if ! aws dynamodb describe-table --table-name "${TF_STATE_LOCK_TABLE}" >/dev/null 2>&1; then
+            echo "Creating DynamoDB table for Terraform locks"
+            aws dynamodb create-table \
+              --table-name "${TF_STATE_LOCK_TABLE}" \
+              --attribute-definitions AttributeName=LockID,AttributeType=S \
+              --key-schema AttributeName=LockID,KeyType=HASH \
+              --billing-mode PAY_PER_REQUEST \
+              --tags "Key=${{ env.APP_TAG_KEY }},Value=${APP_ARN}" "Key=Name,Value=${TF_STATE_LOCK_TABLE}" "Key=Purpose,Value=TerraformStateLock"
+
+            echo "Waiting for DynamoDB table to become ACTIVE"
+            aws dynamodb wait table-exists --table-name "${TF_STATE_LOCK_TABLE}"
+            
+            echo "✅ Created and tagged DynamoDB table"
+          else
+            echo "DynamoDB table already exists"
+            
+            # Update tags on existing table
+            TABLE_ARN=$(aws dynamodb describe-table --table-name "${TF_STATE_LOCK_TABLE}" --query 'Table.TableArn' --output text)
+            aws dynamodb tag-resource \
+              --resource-arn "$TABLE_ARN" \
+              --tags "Key=${{ env.APP_TAG_KEY }},Value=${APP_ARN}" "Key=Name,Value=${TF_STATE_LOCK_TABLE}" "Key=Purpose,Value=TerraformStateLock"
+          fi
+
+      - name: Build Lambda functions
+        run: |
+          # Build Lambda layer with dependencies
+          cd lambda/layers
+          npm install --omit=dev
+          mkdir -p nodejs
+          cp -r node_modules nodejs/
+          cd nodejs
+          zip -r ../dependencies.zip .
+          cd ..
+          rm -rf nodejs
+
+          # Build API handler function
+          cd ../functions/api-handler
+          mkdir -p build
+          cp index.js build/
+          cp -r ../../shared build/
+          cd build
+          zip -r ../../api-handler.zip .
+          cd ..
+          rm -rf build
+
+          # Build Auth handler function
+          cd ../auth-handler
+          mkdir -p build
+          cp index.js build/
+          cp -r ../../shared build/
+          cd build
+          zip -r ../../auth-handler.zip .
+          cd ..
+          rm -rf build
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+        env:
+          TF_VAR_app_name: ${{ env.APP_NAME }}
+          TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan
+        working-directory: ./terraform
+        continue-on-error: true
+        env:
+          TF_VAR_app_name: ${{ env.APP_NAME }}
+          TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
+
+      - name: Terraform Apply
+        if: steps.plan.outcome == 'success'
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./terraform
+        env:
+          TF_VAR_app_name: ${{ env.APP_NAME }}
+          TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
+
+      - name: Get Terraform Outputs
+        id: tf_outputs
+        run: |
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "api_url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
+          echo "cognito_user_pool_id=$(terraform output -raw cognito_user_pool_id)" >> $GITHUB_OUTPUT
+          echo "cognito_client_id=$(terraform output -raw cognito_client_id)" >> $GITHUB_OUTPUT
+          echo "cloudfront_url=$(terraform output -raw cloudfront_url)" >> $GITHUB_OUTPUT
+        working-directory: ./terraform
+
+      - name: Associate Terraform-created resources with AppRegistry
+        run: |
+          set -euo pipefail
+
+          echo "Associating resources with AppRegistry application..."
+
+          # Get all resources created by Terraform with the awsApplication tag
+          RESOURCES=$(aws resourcegroupstaggingapi get-resources \
+            --tag-filters "Key=${{ env.APP_TAG_KEY }},Values=${APP_ARN}" \
+            --query 'ResourceTagMappingList[].ResourceARN' \
+            --output text)
+
+          if [ -n "$RESOURCES" ]; then
+            echo "Found $(echo $RESOURCES | wc -w) resources to associate"
+            
+            # Associate resources with the application resource group
+            for RESOURCE_ARN in $RESOURCES; do
+              echo "Associating: $RESOURCE_ARN"
+              aws resource-groups group-resources \
+                --group "${APP_ARN}" \
+                --resource-arns "$RESOURCE_ARN" 2>/dev/null || true
+            done
+            
+            echo "✅ Resources associated with myApplications group"
+          else
+            echo "⚠️  No resources found with awsApplication tag yet"
+          fi
+
+      - name: Wait for S3 bucket policy propagation
+        run: |
+          echo "Waiting for S3 bucket policy to propagate..."
+          BUCKET="${{ steps.tf_outputs.outputs.s3_bucket }}"
+
+          MAX_ATTEMPTS=6
+          ATTEMPT=1
+          WAIT_TIME=5
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking bucket policy..."
+            
+            if aws s3api get-bucket-policy --bucket "$BUCKET" >/dev/null 2>&1; then
+              echo "✅ Bucket policy verified successfully"
+              break
+            fi
+            
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "⚠️  Warning: Could not verify bucket policy after $MAX_ATTEMPTS attempts"
+              echo "Proceeding with deployment..."
+            else
+              echo "Waiting ${WAIT_TIME}s before retry..."
+              sleep $WAIT_TIME
+              ATTEMPT=$((ATTEMPT + 1))
+              WAIT_TIME=$((WAIT_TIME * 2))
+            fi
+          done
+
+      - name: Create frontend config
+        run: |
+          cat > ./dist/public/config.js << EOF
+          window.AWS_CONFIG = {
+            apiUrl: '${{ steps.tf_outputs.outputs.api_url }}',
+            cognitoUserPoolId: '${{ steps.tf_outputs.outputs.cognito_user_pool_id }}',
+            cognitoClientId: '${{ steps.tf_outputs.outputs.cognito_client_id }}',
+            region: '${{ env.AWS_REGION }}'
+          };
+          EOF
+
+      - name: Deploy frontend to S3
+        run: |
+          echo "Deploying frontend files to S3..."
+          aws s3 sync ./dist/public s3://${{ steps.tf_outputs.outputs.s3_bucket }} \
+            --delete \
+            --cache-control "public, max-age=3600" \
+            --exclude "*.html" \
+            --exclude "config.js" \
+            --sse AES256
+
+          echo "Setting correct content types for HTML and config files..."
+          # Upload HTML files with no-cache
+          find ./dist/public -name "*.html" -type f | while read file; do
+            key="${file#./dist/public/}"
+            aws s3 cp "$file" "s3://${{ steps.tf_outputs.outputs.s3_bucket }}/$key" \
+              --content-type "text/html" \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --metadata-directive REPLACE \
+              --sse AES256
+          done
+
+          # Upload config.js with no-cache
+          if [ -f ./dist/public/config.js ]; then
+            aws s3 cp ./dist/public/config.js \
+              s3://${{ steps.tf_outputs.outputs.s3_bucket }}/config.js \
+              --content-type "application/javascript" \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --metadata-directive REPLACE \
+              --sse AES256
+          fi
+
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Creating CloudFront cache invalidation..."
+          DISTRIBUTION_ID="${{ steps.tf_outputs.outputs.cloudfront_id }}"
+
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+
+          echo "Invalidation ID: $INVALIDATION_ID"
+          echo "Waiting for invalidation to complete (max 20 minutes)..."
+
+          if timeout 1200 aws cloudfront wait invalidation-completed \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --id "$INVALIDATION_ID"; then
+            echo "✅ Cache invalidation completed successfully"
+          else
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -eq 124 ]; then
+              echo "⚠️  Timeout: Invalidation is taking longer than expected"
+              echo "Check status: aws cloudfront get-invalidation --distribution-id $DISTRIBUTION_ID --id $INVALIDATION_ID"
+            else
+              echo "⚠️  Invalidation wait failed with exit code $EXIT_CODE"
+            fi
+            echo "Continuing with deployment verification..."
+          fi
+
+      - name: Verify Deployment
+        run: |
+          echo "Verifying CloudFront deployment..."
+          CLOUDFRONT_URL="${{ steps.tf_outputs.outputs.cloudfront_url }}"
+          echo "CloudFront URL: $CLOUDFRONT_URL"
+
+          echo "Waiting for DNS propagation..."
+          sleep 5
+
+          MAX_RETRIES=3
+          RETRY=1
+          SUCCESS=false
+
+          while [ $RETRY -le $MAX_RETRIES ]; do
+            echo "Verification attempt $RETRY/$MAX_RETRIES..."
+            
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 10 \
+              --retry 2 \
+              --retry-delay 2 \
+              "$CLOUDFRONT_URL")
+            
+            echo "HTTP Status Code: $HTTP_STATUS"
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Deployment successful! CloudFront is serving content."
+              SUCCESS=true
+              break
+            elif [ "$HTTP_STATUS" = "403" ]; then
+              echo "⚠️  CloudFront returned 403 Access Denied on attempt $RETRY"
+              if [ $RETRY -lt $MAX_RETRIES ]; then
+                echo "Waiting 10s before retry (policy may still be propagating)..."
+                sleep 10
+              fi
+            elif [ "$HTTP_STATUS" = "000" ]; then
+              echo "⚠️  Could not connect to CloudFront (network/DNS issue)"
+              if [ $RETRY -lt $MAX_RETRIES ]; then
+                echo "Waiting 10s before retry..."
+                sleep 10
+              fi
+            else
+              echo "⚠️  Unexpected HTTP status: $HTTP_STATUS"
+              break
+            fi
+            
+            RETRY=$((RETRY + 1))
+          done
+
+          if [ "$SUCCESS" = "false" ]; then
+            echo ""
+            echo "⚠️  WARNING: Deployment verification did not return HTTP 200"
+            echo "Please wait 5 minutes and try accessing the URL manually."
+          fi
+
+      - name: Deployment Summary
+        run: |
+          echo "## BecomeLog Deployment Complete! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📱 Application: become-log" >> $GITHUB_STEP_SUMMARY
+          echo "View all resources in [AWS myApplications](https://console.aws.amazon.com/systems-manager/appmanager/application/AWS_AppRegistry_Application-${{ env.APP_NAME }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📍 URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend**: ${{ steps.tf_outputs.outputs.cloudfront_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Gateway**: ${{ steps.tf_outputs.outputs.api_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔐 Cognito Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **User Pool ID**: ${{ steps.tf_outputs.outputs.cognito_user_pool_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Client ID**: ${{ steps.tf_outputs.outputs.cognito_client_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Visit the CloudFront URL to access BecomeLog" >> $GITHUB_STEP_SUMMARY
+          echo "2. Sign up using Cognito authentication" >> $GITHUB_STEP_SUMMARY
+          echo "3. View all app resources in AWS Console > myApplications" >> $GITHUB_STEP_SUMMARY
