@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { isCognitoConfigured } from '@/lib/auth-integration';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { LogIn, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -28,6 +29,11 @@ function LoginPage() {
   const [signupName, setSignupName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cognitoConfigured, setCognitoConfigured] = useState(false);
+
+  useEffect(() => {
+    setCognitoConfigured(isCognitoConfigured());
+  }, []);
 
   if (isAuthenticated) {
     navigate({ to: '/' });
@@ -38,6 +44,13 @@ function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    if (cognitoConfigured) {
+      // For Cognito, redirect immediately - authentication happens via callback
+      await login(loginEmail, loginPassword);
+      // This won't return for Cognito (redirects happen)
+      return;
+    }
 
     const success = await login(loginEmail, loginPassword);
     if (success) {
@@ -56,6 +69,13 @@ function LoginPage() {
     if (signupPassword.length < 6) {
       setError('Password must be at least 6 characters');
       setLoading(false);
+      return;
+    }
+
+    if (cognitoConfigured) {
+      // For Cognito, redirect immediately - authentication happens via callback
+      await signup(signupEmail, signupPassword, signupName);
+      // This won't return for Cognito (redirects happen)
       return;
     }
 
@@ -78,6 +98,16 @@ function LoginPage() {
           <p className="app-text-subtle">
             Track your progress, achieve your goals
           </p>
+          {cognitoConfigured && (
+            <p className="text-sm app-text-muted mt-2">
+              Using Cognito authentication
+            </p>
+          )}
+          {!cognitoConfigured && (
+            <p className="text-sm app-text-muted mt-2">
+              Using local authentication mode
+            </p>
+          )}
         </div>{' '}
         <Tabs defaultValue="login">
           <TabsList className="grid w-full grid-cols-2 mb-4">
