@@ -381,7 +381,7 @@ function DailyLogForm() {
         <div className="space-y-4 border-t pt-6">
           <Label>3:1 Scorecard</Label>
           <div className="space-y-2">
-            <Label className="text-sm text-zinc-600 dark:text-zinc-400">
+            <Label className="text-sm app-text-subtle">
               3 Strengths Demonstrated Today
             </Label>
             {[0, 1, 2].map((index) => (
@@ -394,7 +394,7 @@ function DailyLogForm() {
             ))}
           </div>
           <div className="space-y-2">
-            <Label className="text-sm text-zinc-600 dark:text-zinc-400">
+            <Label className="text-sm app-text-subtle">
               1 Area Needs Improvement
             </Label>
             <Input
@@ -403,7 +403,7 @@ function DailyLogForm() {
               onChange={(e) => setNeedsImprovement(e.target.value)}
             />
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-500 italic mt-2">
+          <p className="text-xs app-text-muted italic mt-2">
             💡 Skills are automatically detected from your notes and goals
           </p>
         </div>
@@ -596,24 +596,23 @@ function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-              <p className="text-sm app-text-subtle mb-1">Total Hours</p>
-              <p className="text-2xl font-bold app-text-strong">
-                {totalHours}h
-              </p>
-            </div>
-            <div className="text-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-              <p className="text-sm app-text-subtle mb-1">Total Tasks</p>
-              <p className="text-2xl font-bold app-text-strong">
-                {totalTaskCount}
-              </p>
-            </div>
-            <div className="text-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-              <p className="text-sm app-text-subtle mb-1">Avg Hours/Day</p>
-              <p className="text-2xl font-bold app-text-strong">
-                {avgTimePerDay}h
-              </p>
-            </div>
+            {[
+              { label: 'Total Hours', value: `${totalHours}h` },
+              { label: 'Total Tasks', value: totalTaskCount },
+              { label: 'Avg Hours/Day', value: `${avgTimePerDay}h` },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col justify-center rounded-lg border app-border-default bg-gradient-to-b from-[color-mix(in_oklab,var(--color-app-surface)_90%,black_10%)] to-[color-mix(in_oklab,var(--color-app-surface)_75%,black_25%)] p-4 text-center shadow-sm"
+              >
+                <p className="text-xs tracking-wide uppercase app-text-muted mb-2">
+                  {stat.label}
+                </p>
+                <p className="text-2xl font-semibold app-text-strong">
+                  {stat.value}
+                </p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -649,7 +648,10 @@ function Dashboard() {
           {recentView === 'entries' ? (
             <div className="space-y-4">
               {entries.slice(0, 10).map((entry) => (
-                <div key={entry.id} className="border rounded-lg p-4 space-y-2">
+                <div
+                  key={entry.id}
+                  className="border app-border-default rounded-lg p-4 space-y-2 app-bg-surface-alt"
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-semibold">
@@ -708,11 +710,11 @@ function Dashboard() {
                   return (
                     <div
                       key={`${task.entryId}-${task.id}`}
-                      className="border rounded-lg p-4 space-y-2"
+                      className="border app-border-default rounded-lg p-4 space-y-2 app-bg-surface-alt"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <p className="text-xs text-zinc-500 dark:text-zinc-500 mb-1">
+                          <p className="text-xs app-text-muted mb-1">
                             {new Date(task.date).toLocaleDateString()}
                           </p>
                           {task.link && (
@@ -720,7 +722,7 @@ function Dashboard() {
                               href={task.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                              className="text-sm font-medium text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
                             >
                               {task.link}
                             </a>
@@ -781,9 +783,7 @@ function Insights() {
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <p className="text-zinc-600 dark:text-zinc-400">
-            Loading insights...
-          </p>
+          <p className="app-text-subtle">Loading insights...</p>
         </CardContent>
       </Card>
     );
@@ -793,7 +793,7 @@ function Insights() {
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <p className="text-zinc-600 dark:text-zinc-400">
+          <p className="app-text-subtle">
             Log at least 3 days to see pattern insights!
           </p>
         </CardContent>
@@ -916,7 +916,7 @@ function Insights() {
         </CardHeader>
         <CardContent>
           {insights.length === 0 ? (
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="app-text-subtle">
               No significant patterns detected yet. Continue logging to surface
               insights.
             </p>
@@ -924,8 +924,8 @@ function Insights() {
             <ul className="space-y-3">
               {insights.map((insight) => (
                 <li key={insight} className="flex gap-3 items-start">
-                  <Brain className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-                  <p className="text-zinc-700 dark:text-zinc-300">{insight}</p>
+                  <Brain className="text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" />
+                  <p className="app-text-subtle">{insight}</p>
                 </li>
               ))}
             </ul>
@@ -942,14 +942,14 @@ function Insights() {
         </CardHeader>
         <CardContent>
           {topSkills.length === 0 && topStrengths.length === 0 ? (
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="app-text-subtle">
               Start logging skills and strengths to build your mind map!
             </p>
           ) : (
             <div className="grid md:grid-cols-2 gap-8">
               {topSkills.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-lg mb-4 text-zinc-900 dark:text-zinc-100">
+                  <h3 className="font-semibold text-lg mb-4 app-text-strong">
                     Top Skills
                   </h3>
                   <div className="space-y-2">
@@ -958,7 +958,7 @@ function Insights() {
                         key={skill}
                         className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                       >
-                        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <span className="font-medium app-text-strong">
                           {skill}
                         </span>
                         <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
@@ -971,7 +971,7 @@ function Insights() {
               )}
               {topStrengths.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-lg mb-4 text-zinc-900 dark:text-zinc-100">
+                  <h3 className="font-semibold text-lg mb-4 app-text-strong">
                     Top Strengths
                   </h3>
                   <div className="space-y-2">
@@ -980,7 +980,7 @@ function Insights() {
                         key={strength}
                         className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
                       >
-                        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <span className="font-medium app-text-strong">
                           {strength}
                         </span>
                         <span className="text-xs px-2 py-1 rounded-full bg-green-600 text-white">

@@ -133,7 +133,7 @@ function RouteComponent() {
       </div>
 
       {stats && stats.total > 0 && (
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 dark:from-blue-950 dark:to-purple-950 dark:border-blue-800">
+        <Card className="app-bg-surface-alt app-border-default border">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -169,11 +169,11 @@ function RouteComponent() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+          <CardTitle className="flex items-center gap-2 app-text-strong">
             <Sparkles className="w-5 h-5 text-purple-600" />
             New Spiritual Moment
           </CardTitle>
-          <CardDescription className="text-zinc-700 dark:text-zinc-300">
+          <CardDescription className="app-text-subtle">
             Record a moment of seeking divine guidance and aligning with God's
             will
           </CardDescription>
@@ -183,7 +183,7 @@ function RouteComponent() {
             <div>
               <Label
                 htmlFor="situation"
-                className="text-zinc-800 dark:text-zinc-200 font-medium"
+                className="app-text-strong font-medium"
               >
                 Situation or Decision
               </Label>
@@ -197,10 +197,7 @@ function RouteComponent() {
             </div>
 
             <div>
-              <Label
-                htmlFor="seeking"
-                className="text-zinc-800 dark:text-zinc-200 font-medium"
-              >
+              <Label htmlFor="seeking" className="app-text-strong font-medium">
                 How did you seek the Holy Ghost's guidance?
               </Label>
               <Textarea
@@ -213,10 +210,7 @@ function RouteComponent() {
             </div>
 
             <div>
-              <Label
-                htmlFor="guidance"
-                className="text-zinc-800 dark:text-zinc-200 font-medium"
-              >
+              <Label htmlFor="guidance" className="app-text-strong font-medium">
                 What guidance did you receive?
               </Label>
               <Textarea
@@ -232,7 +226,7 @@ function RouteComponent() {
               <div>
                 <Label
                   htmlFor="myDesire"
-                  className="text-zinc-800 dark:text-zinc-200 font-medium"
+                  className="app-text-strong font-medium"
                 >
                   My Desires
                 </Label>
@@ -247,7 +241,7 @@ function RouteComponent() {
               <div>
                 <Label
                   htmlFor="godsWill"
-                  className="text-zinc-800 dark:text-zinc-200 font-medium"
+                  className="app-text-strong font-medium"
                 >
                   God's Will (as I understand it)
                 </Label>
@@ -262,10 +256,7 @@ function RouteComponent() {
             </div>
 
             <div>
-              <Label
-                htmlFor="action"
-                className="text-zinc-800 dark:text-zinc-200 font-medium"
-              >
+              <Label htmlFor="action" className="app-text-strong font-medium">
                 What action did you take?
               </Label>
               <Textarea
@@ -278,16 +269,16 @@ function RouteComponent() {
             </div>
 
             <div>
-              <Label className="text-zinc-800 dark:text-zinc-200 font-medium">
+              <Label className="app-text-strong font-medium">
                 Alignment Assessment
               </Label>
               <div className="flex gap-3 mt-2">
                 <button
                   type="button"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border app-border-default transition-colors ${
                     alignment === 'aligned'
                       ? 'bg-green-100 border-green-300 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-100'
-                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                      : 'app-bg-surface-alt'
                   }`}
                   onClick={() => setAlignment('aligned')}
                 >
@@ -296,10 +287,10 @@ function RouteComponent() {
                 </button>
                 <button
                   type="button"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border app-border-default transition-colors ${
                     alignment === 'partial'
                       ? 'bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-100'
-                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                      : 'app-bg-surface-alt'
                   }`}
                   onClick={() => setAlignment('partial')}
                 >
@@ -308,10 +299,10 @@ function RouteComponent() {
                 </button>
                 <button
                   type="button"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border app-border-default transition-colors ${
                     alignment === 'struggling'
                       ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-100'
-                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                      : 'app-bg-surface-alt'
                   }`}
                   onClick={() => setAlignment('struggling')}
                 >
@@ -324,7 +315,7 @@ function RouteComponent() {
             <div>
               <Label
                 htmlFor="reflection"
-                className="text-zinc-800 dark:text-zinc-200 font-medium"
+                className="app-text-strong font-medium"
               >
                 Reflection & Gratitude
               </Label>
@@ -375,14 +366,14 @@ function RouteComponent() {
                 .map((entry) => (
                   <div
                     key={entry.id}
-                    className="border rounded-lg p-4 space-y-3 bg-gradient-to-r from-zinc-50 to-blue-50 dark:from-zinc-900 dark:to-blue-950"
+                    className="border app-border-default rounded-lg p-4 space-y-3 app-bg-surface-alt"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                        <h4 className="font-semibold app-text-strong">
                           {entry.situation}
                         </h4>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs app-text-muted">
                           {new Date(entry.date).toLocaleString()}
                         </p>
                       </div>
@@ -411,7 +402,7 @@ function RouteComponent() {
                         <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">
                           Divine Guidance
                         </p>
-                        <p className="text-sm text-zinc-700 dark:text-zinc-300 italic">
+                        <p className="text-sm app-text-subtle italic">
                           "{entry.holyGhostGuidance}"
                         </p>
                       </div>
@@ -421,7 +412,7 @@ function RouteComponent() {
                       <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
                         Action Taken
                       </p>
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                      <p className="text-sm app-text-subtle">
                         {entry.actionTaken}
                       </p>
                     </div>
@@ -431,7 +422,7 @@ function RouteComponent() {
                         <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
                           Reflection
                         </p>
-                        <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                        <p className="text-sm app-text-subtle">
                           {entry.reflection}
                         </p>
                       </div>
