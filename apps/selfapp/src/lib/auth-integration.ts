@@ -22,10 +22,30 @@ class AuthIntegration {
 
   constructor() {
     // In standalone mode, immediately mark as authenticated
+    // Prefer a token persisted to localStorage (local dev DB surrogate) when available
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = window.localStorage.getItem('SELFAPP_AUTH_TOKEN');
+        if (stored) {
+          this.state.token = stored;
+          this.state.status = 'authenticated';
+        } else {
+          this.state.token =
+            import.meta.env.VITE_DEV_AUTH_TOKEN || 'local-dev-token';
+        }
+      }
+    } catch (e) {
+      // localStorage might not be available in some environments
+      this.state.token =
+        import.meta.env.VITE_DEV_AUTH_TOKEN || 'local-dev-token';
+    }
+
     console.log('Running in standalone mode - auth bypassed');
     console.log(
       'Using dev token:',
-      this.state.token === 'local-dev-token' ? 'default' : 'from environment'
+      this.state.token === 'local-dev-token'
+        ? 'default'
+        : 'from environment or localStorage'
     );
   }
 
@@ -82,6 +102,33 @@ class AuthIntegration {
       status: 'unauthenticated',
       parentOrigin: null,
     };
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem('SELFAPP_AUTH_TOKEN');
+      }
+    } catch (e) {
+      // ignore
+    }
+    this.notifyListeners();
+  }
+
+  /**
+   * Persist an auth token (async-friendly API). Uses localStorage as a simple local DB.
+   */
+  public async setAuthTokenAsync(token: string | null): Promise<void> {
+    this.state.token = token;
+    this.state.status = token ? 'authenticated' : 'unauthenticated';
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        if (token) {
+          window.localStorage.setItem('SELFAPP_AUTH_TOKEN', token);
+        } else {
+          window.localStorage.removeItem('SELFAPP_AUTH_TOKEN');
+        }
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
     this.notifyListeners();
   }
 
@@ -185,6 +232,20 @@ export function clearAuth(): void {
  */
 export function createAuthenticatedFetch(): typeof fetch {
   return authIntegration.createAuthenticatedFetch();
+}
+
+/**
+ * Async-friendly getter for token (compat with callers expecting async API).
+ */
+export async function getAuthTokenAsync(): Promise<string | null> {
+  return Promise.resolve(authIntegration.getAuthToken());
+}
+
+/**
+ * Async-friendly setter for token. Persists to localStorage.
+ */
+export async function setAuthTokenAsync(token: string | null): Promise<void> {
+  return authIntegration.setAuthTokenAsync(token);
 }
 
 // Export default for convenience

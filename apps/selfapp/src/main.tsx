@@ -11,6 +11,7 @@ import './styles.css';
 
 // Import and initialize auth integration (standalone mode)
 import { initializeAuthIntegration } from '@/lib/auth-integration';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Simplified app config for standalone mode
 interface GlobalAppConfig {
@@ -80,7 +81,9 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </QueryClientProvider>
     </StrictMode>
   );
