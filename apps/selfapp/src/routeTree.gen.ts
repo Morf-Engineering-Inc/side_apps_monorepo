@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SelfregRouteImport } from './routes/selfreg'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JwtDebugRouteImport } from './routes/jwt-debug'
 import { Route as BecomeRouteImport } from './routes/become'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SelfregRoute = SelfregRouteImport.update({
+  id: '/selfreg',
+  path: '/selfreg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/become': typeof BecomeRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/login': typeof LoginRoute
+  '/selfreg': typeof SelfregRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/become': typeof BecomeRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/login': typeof LoginRoute
+  '/selfreg': typeof SelfregRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/become': typeof BecomeRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/login': typeof LoginRoute
+  '/selfreg': typeof SelfregRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/become' | '/jwt-debug' | '/login'
+  fullPaths: '/' | '/become' | '/jwt-debug' | '/login' | '/selfreg'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/become' | '/jwt-debug' | '/login'
-  id: '__root__' | '/' | '/become' | '/jwt-debug' | '/login'
+  to: '/' | '/become' | '/jwt-debug' | '/login' | '/selfreg'
+  id: '__root__' | '/' | '/become' | '/jwt-debug' | '/login' | '/selfreg'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   BecomeRoute: typeof BecomeRoute
   JwtDebugRoute: typeof JwtDebugRoute
   LoginRoute: typeof LoginRoute
+  SelfregRoute: typeof SelfregRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/selfreg': {
+      id: '/selfreg'
+      path: '/selfreg'
+      fullPath: '/selfreg'
+      preLoaderRoute: typeof SelfregRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   BecomeRoute: BecomeRoute,
   JwtDebugRoute: JwtDebugRoute,
   LoginRoute: LoginRoute,
+  SelfregRoute: SelfregRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

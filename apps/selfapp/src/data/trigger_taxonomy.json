@@ -1,0 +1,781 @@
+{
+    "trigger_taxonomy": [
+        {
+            "category": "Physiological",
+            "triggers": [
+                {
+                    "id": "phys.hunger",
+                    "label": "Hunger / low fuel",
+                    "aliases": [
+                        "empty stomach",
+                        "haven’t eaten",
+                        "low blood sugar"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "phys.thirst",
+                    "label": "Thirst / dehydration",
+                    "aliases": [
+                        "dry mouth",
+                        "not enough water"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "phys.fatigue",
+                    "label": "Fatigue / low sleep",
+                    "aliases": [
+                        "tired",
+                        "sleep debt",
+                        "exhaustion"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "phys.pain",
+                    "label": "Pain / discomfort",
+                    "aliases": [
+                        "headache",
+                        "soreness",
+                        "injury"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "phys.illness",
+                    "label": "Illness / infection",
+                    "aliases": [
+                        "coming down with something"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "phys.caffeine_crash",
+                    "label": "Caffeine crash",
+                    "aliases": [
+                        "afternoon slump"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "phys.hormonal_shift",
+                    "label": "Hormonal shift",
+                    "aliases": [
+                        "cycle change",
+                        "PMS"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "phys.overheated",
+                    "label": "Overheated",
+                    "aliases": [
+                        "hot room",
+                        "sweaty"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Disgust"
+                    ]
+                },
+                {
+                    "id": "phys.cold",
+                    "label": "Cold / under-warmed",
+                    "aliases": [
+                        "chilled",
+                        "shivering"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "phys.hunger_cue_smell",
+                    "label": "Food smell cue",
+                    "aliases": [
+                        "bakery smell",
+                        "BBQ aroma"
+                    ],
+                    "likely_emotion_families": [
+                        "Joy",
+                        "Desire (map to Love / Care or Trust/Safety as comfort)"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Environment",
+            "triggers": [
+                {
+                    "id": "env.noise",
+                    "label": "Loud noise / chatter",
+                    "aliases": [
+                        "construction",
+                        "kids yelling"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "env.clutter",
+                    "label": "Visual clutter / mess",
+                    "aliases": [
+                        "disorganized desk",
+                        "dirty kitchen"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Disgust"
+                    ]
+                },
+                {
+                    "id": "env.bright_light",
+                    "label": "Harsh light / glare",
+                    "aliases": [
+                        "screen glare",
+                        "flicker"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "env.crowds",
+                    "label": "Crowded space",
+                    "aliases": [
+                        "lineups",
+                        "packed room"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "env.time_pressure",
+                    "label": "Time pressure",
+                    "aliases": [
+                        "running late",
+                        "rushed"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "env.traffic",
+                    "label": "Traffic / commute stress",
+                    "aliases": [
+                        "jam",
+                        "gridlock"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "env.weather",
+                    "label": "Bad weather",
+                    "aliases": [
+                        "storms",
+                        "gray skies"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Social / Relational",
+            "triggers": [
+                {
+                    "id": "soc.conflict",
+                    "label": "Argument / conflict",
+                    "aliases": [
+                        "heated discussion",
+                        "fight"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "soc.criticism",
+                    "label": "Criticism / negative feedback",
+                    "aliases": [
+                        "called out",
+                        "scolded"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Sadness",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "soc.rejection",
+                    "label": "Rejection / exclusion",
+                    "aliases": [
+                        "not invited",
+                        "ghosted"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "soc.misunderstood",
+                    "label": "Being misunderstood",
+                    "aliases": [
+                        "not heard",
+                        "misread"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "soc.boundary_cross",
+                    "label": "Boundary crossed",
+                    "aliases": [
+                        "disrespected",
+                        "ignored no"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "soc.unfairness",
+                    "label": "Unfairness / injustice",
+                    "aliases": [
+                        "double standard",
+                        "favoritism"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Disgust"
+                    ]
+                },
+                {
+                    "id": "soc.comparison",
+                    "label": "Social comparison",
+                    "aliases": [
+                        "envy",
+                        "status check"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "soc.loneliness",
+                    "label": "Loneliness / isolation",
+                    "aliases": [
+                        "left out",
+                        "alone"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Work / Task",
+            "triggers": [
+                {
+                    "id": "work.ambiguity",
+                    "label": "Ambiguous task / unclear expectations",
+                    "aliases": [
+                        "what does done mean?",
+                        "vague brief"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "work.interruptions",
+                    "label": "Interruptions / context switching",
+                    "aliases": [
+                        "pinged constantly",
+                        "drop-ins"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "work.multitask",
+                    "label": "Too many parallel tasks",
+                    "aliases": [
+                        "juggling plates"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "work.deadline",
+                    "label": "Tight deadline",
+                    "aliases": [
+                        "due today",
+                        "crunch time"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "work.failure",
+                    "label": "Setback / failure",
+                    "aliases": [
+                        "bug shipped",
+                        "deal lost"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "work.success_letdown",
+                    "label": "Post-success letdown",
+                    "aliases": [
+                        "anti-climax",
+                        "now what?"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Surprise"
+                    ]
+                },
+                {
+                    "id": "work.boredom",
+                    "label": "Boredom / understimulated",
+                    "aliases": [
+                        "mind-numbing task"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "work.decision_overload",
+                    "label": "Decision fatigue",
+                    "aliases": [
+                        "too many choices"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Digital / Media",
+            "triggers": [
+                {
+                    "id": "dig.notifications",
+                    "label": "Notification spike",
+                    "aliases": [
+                        "constant pings",
+                        "slack/email barrage"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "dig.doomscroll",
+                    "label": "Doomscrolling",
+                    "aliases": [
+                        "news spiral",
+                        "feed rabbit hole"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "dig.news_shock",
+                    "label": "Disturbing news",
+                    "aliases": [
+                        "breaking tragedy"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness",
+                        "Anger",
+                        "Disgust"
+                    ]
+                },
+                {
+                    "id": "dig.low_battery",
+                    "label": "Low battery / tech failure",
+                    "aliases": [
+                        "crash",
+                        "lost draft"
+                    ],
+                    "likely_emotion_families": [
+                        "Anger",
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "dig.social_media_comparison",
+                    "label": "Social media comparison",
+                    "aliases": [
+                        "highlight reel envy"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Cognitive / Appraisal",
+            "triggers": [
+                {
+                    "id": "cog.rumination",
+                    "label": "Rumination",
+                    "aliases": [
+                        "looping thoughts"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "cog.perfectionism",
+                    "label": "Perfectionism standard",
+                    "aliases": [
+                        "not good enough",
+                        "all-or-nothing"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "cog.catastrophizing",
+                    "label": "Catastrophic thinking",
+                    "aliases": [
+                        "worst-case spiral"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "cog.imposter",
+                    "label": "Imposter feelings",
+                    "aliases": [
+                        "I don’t belong"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "cog.fomo",
+                    "label": "Fear of missing out",
+                    "aliases": [
+                        "FOMO"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "cog.shame_spike",
+                    "label": "Shame spike",
+                    "aliases": [
+                        "I am bad"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "cog.guilt_spike",
+                    "label": "Guilt spike",
+                    "aliases": [
+                        "I did wrong"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Financial / Practical",
+            "triggers": [
+                {
+                    "id": "fin.unexpected_expense",
+                    "label": "Unexpected expense",
+                    "aliases": [
+                        "car repair",
+                        "medical bill"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "fin.debt_reminder",
+                    "label": "Debt reminder",
+                    "aliases": [
+                        "collections email"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "fin.income_uncertainty",
+                    "label": "Income uncertainty",
+                    "aliases": [
+                        "client canceled",
+                        "hours cut"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Sadness"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Spiritual / Moral",
+            "triggers": [
+                {
+                    "id": "spi.temptation",
+                    "label": "Temptation cue",
+                    "aliases": [
+                        "old habit nudge"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger",
+                        "Sadness"
+                    ]
+                },
+                {
+                    "id": "spi.guilt_after_lapse",
+                    "label": "Guilt after lapse",
+                    "aliases": [
+                        "relapse regret"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "spi.spiritual_dryness",
+                    "label": "Spiritual dryness",
+                    "aliases": [
+                        "distant from God"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Temporal / Rhythm",
+            "triggers": [
+                {
+                    "id": "time.morning_rush",
+                    "label": "Morning rush",
+                    "aliases": [
+                        "school run",
+                        "late start"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "time.afternoon_slump",
+                    "label": "Afternoon slump",
+                    "aliases": [
+                        "2–4 pm dip"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Anger"
+                    ]
+                },
+                {
+                    "id": "time.late_night",
+                    "label": "Late-night vulnerability",
+                    "aliases": [
+                        "tired + alone",
+                        "willpower low"
+                    ],
+                    "likely_emotion_families": [
+                        "Sadness",
+                        "Fear"
+                    ]
+                },
+                {
+                    "id": "time.deadline_proximity",
+                    "label": "Deadline approaching",
+                    "aliases": [
+                        "T-24 hours"
+                    ],
+                    "likely_emotion_families": [
+                        "Fear",
+                        "Anger"
+                    ]
+                }
+            ]
+        }
+    ],
+    "impulse_taxonomy": [
+        {
+            "id": "imp.scroll",
+            "label": "Scroll phone / social"
+        },
+        {
+            "id": "imp.sugar",
+            "label": "Eat sugar / snack mindlessly"
+        },
+        {
+            "id": "imp.binge",
+            "label": "Binge watch / games"
+        },
+        {
+            "id": "imp.withdraw",
+            "label": "Withdraw / avoid people"
+        },
+        {
+            "id": "imp.procrastinate",
+            "label": "Procrastinate task"
+        },
+        {
+            "id": "imp.shop",
+            "label": "Shop online / spend"
+        },
+        {
+            "id": "imp.lash_out",
+            "label": "Lash out / argue"
+        },
+        {
+            "id": "imp.perfect",
+            "label": "Over-polish / perfectionism loop"
+        },
+        {
+            "id": "imp.escape_drive",
+            "label": "Drive aimlessly / leave scene"
+        },
+        {
+            "id": "imp.vices",
+            "label": "Addictive vice (user-defined)"
+        }
+    ],
+    "resolution_levels_meta": {
+        "description": "Use emotion resolution levels to move from broad affect to specific, contextualized feeling.",
+        "levels": [
+            {
+                "level": "coarse",
+                "example": "anger"
+            },
+            {
+                "level": "medium",
+                "example": "frustration"
+            },
+            {
+                "level": "fine",
+                "example": "I feel disrespected because my boundary was crossed."
+            }
+        ],
+        "recommended_ui_flow": [
+            "Select family (8-root affect)",
+            "Select specific term (medium granularity)",
+            "Optional: write one-sentence fine-grain context"
+        ]
+    },
+    "identity_alignment_tags": [
+        {
+            "id": "align.inward",
+            "label": "Inward (self-protective)"
+        },
+        {
+            "id": "align.outward",
+            "label": "Outward (Christlike / other-oriented)"
+        }
+    ]
+}
