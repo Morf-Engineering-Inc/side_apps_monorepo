@@ -63,6 +63,12 @@ const items: {
     icon: <Brain className="h-4 w-4" />,
     path: '/',
   },
+  {
+    id: 'profile',
+    label: 'Profile',
+    icon: <User className="h-4 w-4" />,
+    path: '/profile',
+  },
 ];
 
 export default function SideNav({ active, onChange }: Props) {
@@ -74,6 +80,7 @@ export default function SideNav({ active, onChange }: Props) {
     if (location.pathname === '/success') return 'success';
     if (location.pathname === '/selfreg') return 'selfreg';
     if (location.pathname === '/letgod') return 'letgod';
+    if (location.pathname === '/profile') return 'profile';
     if (location.pathname === '/') {
       // Check URL params for tab state
       const urlParams = new URLSearchParams(window.location.search);

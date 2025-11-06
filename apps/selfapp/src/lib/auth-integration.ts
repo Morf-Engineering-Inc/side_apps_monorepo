@@ -21,6 +21,23 @@ class AuthIntegration {
   private listeners: Set<(state: AuthState) => void> = new Set();
 
   constructor() {
+    // Configure Cognito from environment variables if available
+    if (typeof window !== 'undefined') {
+      const cognitoUserPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
+      const cognitoClientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+      const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
+      
+      if (cognitoUserPoolId && cognitoClientId && cognitoDomain) {
+        (window as any).__SELFAPP_COGNITO__ = {
+          userPoolId: cognitoUserPoolId,
+          cognitoClientId: cognitoClientId,
+          cognitoDomain: cognitoDomain,
+          redirectUri: window.location.origin + '/',
+        };
+        console.log('Cognito configured from environment variables');
+      }
+    }
+
     // In standalone mode, immediately mark as authenticated
     // Prefer a token persisted to localStorage (local dev DB surrogate) when available
     try {
