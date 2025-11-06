@@ -34,7 +34,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -145,7 +149,7 @@ jobs:
         run: |
           # Build Lambda layer with dependencies
           cd lambda/layers
-          npm install --omit=dev
+          pnpm install --prod
           mkdir -p nodejs
           cp -r node_modules nodejs/
           cd nodejs
@@ -175,8 +179,8 @@ jobs:
 
       - name: Build frontend
         run: |
-          npm ci
-          npm run build
+          pnpm install
+          pnpm run build
 
       - name: Terraform Init
         run: terraform init
