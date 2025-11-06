@@ -1,28 +1,28 @@
 import {
-  addAuthStateListener,
-  clearAuth,
-  createAuthenticatedFetch,
-  getAuthState,
-  getAuthStatus,
-  getAuthToken,
-  hasInvalidToken,
-  hasNoToken,
-  isAuthenticatedSync,
-  isLoading,
-} from '@/lib/auth-integration';
-import { useEffect, useState } from 'react';
+	addAuthStateListener,
+	clearAuth,
+	createAuthenticatedFetch,
+	getAuthState,
+	getAuthStatus,
+	getAuthToken,
+	hasInvalidToken,
+	hasNoToken,
+	isAuthenticatedSync,
+	isLoading,
+} from "@/lib/auth-integration";
+import { useEffect, useState } from "react";
 
 // Define AuthState type to match the one in auth-integration
 type AuthStatus =
-  | 'authenticated'
-  | 'unauthenticated'
-  | 'invalid_token'
-  | 'loading';
+	| "authenticated"
+	| "unauthenticated"
+	| "invalid_token"
+	| "loading";
 
 interface AuthState {
-  token: string | null;
-  status: AuthStatus;
-  parentOrigin: string | null;
+	token: string | null;
+	status: AuthStatus;
+	parentOrigin: string | null;
 }
 
 /**
@@ -47,33 +47,33 @@ interface AuthState {
  *
  */
 export function useAuth() {
-  // Initialize with current auth state to prevent race conditions
-  const [authState, setAuthState] = useState<AuthState>(() => getAuthState());
+	// Initialize with current auth state to prevent race conditions
+	const [authState, setAuthState] = useState<AuthState>(() => getAuthState());
 
-  useEffect(() => {
-    // Subscribe to auth state changes
-    const cleanup = addAuthStateListener(setAuthState);
-    return cleanup;
-  }, []);
+	useEffect(() => {
+		// Subscribe to auth state changes
+		const cleanup = addAuthStateListener(setAuthState);
+		return cleanup;
+	}, []);
 
-  return {
-    // State
-    token: authState.token,
-    status: authState.status,
-    isAuthenticated: isAuthenticatedSync(),
-    hasInvalidToken: hasInvalidToken(),
-    hasNoToken: hasNoToken(),
-    isLoading: isLoading(),
-    parentOrigin: authState.parentOrigin,
+	return {
+		// State
+		token: authState.token,
+		status: authState.status,
+		isAuthenticated: isAuthenticatedSync(),
+		hasInvalidToken: hasInvalidToken(),
+		hasNoToken: hasNoToken(),
+		isLoading: isLoading(),
+		parentOrigin: authState.parentOrigin,
 
-    // Utilities
-    getAuthToken,
-    getAuthStatus,
-    isAuthenticatedSync,
-    createAuthenticatedFetch,
-    clearAuth,
+		// Utilities
+		getAuthToken,
+		getAuthStatus,
+		isAuthenticatedSync,
+		createAuthenticatedFetch,
+		clearAuth,
 
-    // For convenience
-    authState,
-  };
+		// For convenience
+		authState,
+	};
 }

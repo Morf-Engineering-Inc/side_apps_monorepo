@@ -1,12 +1,12 @@
 {
-  "self_regulation_log_entry": {
-    "id": "uuid",
-    "timestamp": "ISO8601",
-    "trigger_id": "string",
-    "emotion_family": "string",
-    "emotion_term": "string",
-    "impulse_id": "string",
-    "chosen_action_note": "string",
-    "identity_alignment_tag": "string"
-  }
+	"self_regulation_log_entry": {
+		"id": "uuid",
+		"timestamp": "ISO8601",
+		"trigger_id": "string",
+		"emotion_family": "string",
+		"emotion_term": "string",
+		"impulse_id": "string",
+		"chosen_action_note": "string",
+		"identity_alignment_tag": "string"
+	}
 }

@@ -1,124 +1,124 @@
 {
-    "emotion_families": [
-        {
-            "family": "Joy",
-            "terms": [
-                "joy",
-                "amusement",
-                "serenity",
-                "gratitude",
-                "hope",
-                "delight",
-                "pride",
-                "inspiration",
-                "enthusiasm",
-                "contentment"
-            ]
-        },
-        {
-            "family": "Love / Care",
-            "terms": [
-                "love",
-                "affection",
-                "warmth",
-                "fondness",
-                "compassion",
-                "tenderness",
-                "nurturance",
-                "care",
-                "cherishing",
-                "devotion"
-            ]
-        },
-        {
-            "family": "Trust / Safety",
-            "terms": [
-                "calm",
-                "comfortable",
-                "secure",
-                "relaxed",
-                "grounded",
-                "stable",
-                "assured",
-                "confident",
-                "at ease",
-                "peaceful"
-            ]
-        },
-        {
-            "family": "Anger",
-            "terms": [
-                "anger",
-                "irritation",
-                "frustration",
-                "rage",
-                "resentment",
-                "indignation",
-                "contempt",
-                "annoyance",
-                "outrage",
-                "hostility"
-            ]
-        },
-        {
-            "family": "Fear",
-            "terms": [
-                "fear",
-                "anxiety",
-                "dread",
-                "worry",
-                "panic",
-                "terror",
-                "nervousness",
-                "insecurity",
-                "unease",
-                "foreboding"
-            ]
-        },
-        {
-            "family": "Sadness",
-            "terms": [
-                "sadness",
-                "sorrow",
-                "grief",
-                "disappointment",
-                "loneliness",
-                "melancholy",
-                "despair",
-                "discouragement",
-                "hurt",
-                "blue"
-            ]
-        },
-        {
-            "family": "Disgust",
-            "terms": [
-                "disgust",
-                "aversion",
-                "repulsion",
-                "revulsion",
-                "nausea",
-                "moral disgust",
-                "distaste",
-                "abhorrence",
-                "loathing",
-                "contemptuousness"
-            ]
-        },
-        {
-            "family": "Surprise",
-            "terms": [
-                "surprise",
-                "astonishment",
-                "startle",
-                "shock",
-                "wonder",
-                "curiosity",
-                "confusion",
-                "bafflement",
-                "uncertainty",
-                "intrigue"
-            ]
-        }
-    ]
+	"emotion_families": [
+		{
+			"family": "Joy",
+			"terms": [
+				"joy",
+				"amusement",
+				"serenity",
+				"gratitude",
+				"hope",
+				"delight",
+				"pride",
+				"inspiration",
+				"enthusiasm",
+				"contentment"
+			]
+		},
+		{
+			"family": "Love / Care",
+			"terms": [
+				"love",
+				"affection",
+				"warmth",
+				"fondness",
+				"compassion",
+				"tenderness",
+				"nurturance",
+				"care",
+				"cherishing",
+				"devotion"
+			]
+		},
+		{
+			"family": "Trust / Safety",
+			"terms": [
+				"calm",
+				"comfortable",
+				"secure",
+				"relaxed",
+				"grounded",
+				"stable",
+				"assured",
+				"confident",
+				"at ease",
+				"peaceful"
+			]
+		},
+		{
+			"family": "Anger",
+			"terms": [
+				"anger",
+				"irritation",
+				"frustration",
+				"rage",
+				"resentment",
+				"indignation",
+				"contempt",
+				"annoyance",
+				"outrage",
+				"hostility"
+			]
+		},
+		{
+			"family": "Fear",
+			"terms": [
+				"fear",
+				"anxiety",
+				"dread",
+				"worry",
+				"panic",
+				"terror",
+				"nervousness",
+				"insecurity",
+				"unease",
+				"foreboding"
+			]
+		},
+		{
+			"family": "Sadness",
+			"terms": [
+				"sadness",
+				"sorrow",
+				"grief",
+				"disappointment",
+				"loneliness",
+				"melancholy",
+				"despair",
+				"discouragement",
+				"hurt",
+				"blue"
+			]
+		},
+		{
+			"family": "Disgust",
+			"terms": [
+				"disgust",
+				"aversion",
+				"repulsion",
+				"revulsion",
+				"nausea",
+				"moral disgust",
+				"distaste",
+				"abhorrence",
+				"loathing",
+				"contemptuousness"
+			]
+		},
+		{
+			"family": "Surprise",
+			"terms": [
+				"surprise",
+				"astonishment",
+				"startle",
+				"shock",
+				"wonder",
+				"curiosity",
+				"confusion",
+				"bafflement",
+				"uncertainty",
+				"intrigue"
+			]
+		}
+	]
 }

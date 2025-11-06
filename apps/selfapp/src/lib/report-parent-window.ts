@@ -1,103 +1,103 @@
-import { throttle } from 'lodash';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { throttle } from "lodash";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type {
-  IFrameErrorMessage,
-  IFrameMessage,
-  IFrameUIEventMessage,
-} from './types/creao-studio';
+	IFrameErrorMessage,
+	IFrameMessage,
+	IFrameUIEventMessage,
+} from "./types/creao-studio";
 
 /**
  * Generate a CSS selector that uniquely identifies an element
  */
 export function generateUniqueSelector(element: HTMLElement): string {
-  // Try using unique attributes
-  if (element.id) {
-    return `#${element.id}`;
-  }
+	// Try using unique attributes
+	if (element.id) {
+		return `#${element.id}`;
+	}
 
-  // Use data attributes, classes, and element type
-  let selector = element.tagName.toLowerCase();
+	// Use data attributes, classes, and element type
+	let selector = element.tagName.toLowerCase();
 
-  // Add classes (limit to first 2 to keep selector reasonable)
-  const classes = Array.from(element.classList).slice(0, 2);
-  if (classes.length > 0) {
-    selector += `.${classes.join('.')}`;
-  }
+	// Add classes (limit to first 2 to keep selector reasonable)
+	const classes = Array.from(element.classList).slice(0, 2);
+	if (classes.length > 0) {
+		selector += `.${classes.join(".")}`;
+	}
 
-  // Add position among siblings
-  const parent = element.parentElement;
-  if (parent) {
-    const siblings = Array.from(parent.children);
-    const index = siblings.indexOf(element) + 1;
-    selector += `:nth-child(${index})`;
-  }
+	// Add position among siblings
+	const parent = element.parentElement;
+	if (parent) {
+		const siblings = Array.from(parent.children);
+		const index = siblings.indexOf(element) + 1;
+		selector += `:nth-child(${index})`;
+	}
 
-  return selector;
+	return selector;
 }
 
 /**
  * Get the DOM path to an element (from root to the element)
  */
 export function getElementPath(element: HTMLElement): string {
-  const path: string[] = [];
-  let currentElement: HTMLElement | null = element;
+	const path: string[] = [];
+	let currentElement: HTMLElement | null = element;
 
-  // Build path from element up to document body
-  while (currentElement && currentElement !== document.body) {
-    let selector = currentElement.tagName.toLowerCase();
+	// Build path from element up to document body
+	while (currentElement && currentElement !== document.body) {
+		let selector = currentElement.tagName.toLowerCase();
 
-    // Add id if available
-    if (currentElement.id) {
-      selector += `#${currentElement.id}`;
-    } else {
-      // Add position among siblings
-      const parent = currentElement.parentElement;
-      if (parent) {
-        const siblings = Array.from(parent.children);
-        const index = siblings.indexOf(currentElement) + 1;
-        selector += `:nth-child(${index})`;
-      }
-    }
+		// Add id if available
+		if (currentElement.id) {
+			selector += `#${currentElement.id}`;
+		} else {
+			// Add position among siblings
+			const parent = currentElement.parentElement;
+			if (parent) {
+				const siblings = Array.from(parent.children);
+				const index = siblings.indexOf(currentElement) + 1;
+				selector += `:nth-child(${index})`;
+			}
+		}
 
-    path.unshift(selector);
-    currentElement = currentElement.parentElement;
-  }
+		path.unshift(selector);
+		currentElement = currentElement.parentElement;
+	}
 
-  return path.join(' > ');
+	return path.join(" > ");
 }
 
-const REACT_SOURCE_KEY = Symbol.for('react.source');
+const REACT_SOURCE_KEY = Symbol.for("react.source");
 
 function getSourceFromElement(
-  element: HTMLElement | null | undefined
-): IFrameErrorMessage['source'] {
-  // biome-ignore lint/suspicious/noExplicitAny: hard to type
-  let el: any = element;
-  let source:
-    | { fileName: string; lineNumber: number; columnNumber: number }
-    | undefined;
-  for (; !source && el; el = el.parentElement) {
-    const reactPropsKey = Object.keys(el).find((key) =>
-      key.startsWith('__reactProps$')
-    );
-    if (!reactPropsKey) continue;
-    const sourceFn = el[reactPropsKey]?.[REACT_SOURCE_KEY];
-    if (typeof sourceFn === 'function') source = sourceFn();
-    if (source?.fileName.includes('/components/ui/')) source = undefined; // skip shadcn
-  }
-  if (!source || !el) return;
+	element: HTMLElement | null | undefined,
+): IFrameErrorMessage["source"] {
+	// biome-ignore lint/suspicious/noExplicitAny: hard to type
+	let el: any = element;
+	let source:
+		| { fileName: string; lineNumber: number; columnNumber: number }
+		| undefined;
+	for (; !source && el; el = el.parentElement) {
+		const reactPropsKey = Object.keys(el).find((key) =>
+			key.startsWith("__reactProps$"),
+		);
+		if (!reactPropsKey) continue;
+		const sourceFn = el[reactPropsKey]?.[REACT_SOURCE_KEY];
+		if (typeof sourceFn === "function") source = sourceFn();
+		if (source?.fileName.includes("/components/ui/")) source = undefined; // skip shadcn
+	}
+	if (!source || !el) return;
 
-  let filePath = source.fileName;
-  const splitSince = filePath.indexOf('/src/');
-  if (splitSince !== -1) {
-    filePath = filePath.slice(splitSince);
-  }
+	let filePath = source.fileName;
+	const splitSince = filePath.indexOf("/src/");
+	if (splitSince !== -1) {
+		filePath = filePath.slice(splitSince);
+	}
 
-  return {
-    filePath,
-    line: source.lineNumber,
-    column: source.columnNumber,
-  };
+	return {
+		filePath,
+		line: source.lineNumber,
+		column: source.columnNumber,
+	};
 }
 
 /**
@@ -116,128 +116,128 @@ function getSourceFromElement(
  * );
  */
 export function useDelegatedComponentEventHandler<T extends unknown[]>(
-  callback: ((...args: T) => void) | null | undefined,
-  infoGetter: (
-    ...args: T
-  ) => Pick<
-    IFrameErrorMessage,
-    'componentInfo' | 'componentType' | 'eventType'
-  >,
-  element?: HTMLElement | null
+	callback: ((...args: T) => void) | null | undefined,
+	infoGetter: (
+		...args: T
+	) => Pick<
+		IFrameErrorMessage,
+		"componentInfo" | "componentType" | "eventType"
+	>,
+	element?: HTMLElement | null,
 ) {
-  const lastInfoGetter = useRef(infoGetter);
-  lastInfoGetter.current = infoGetter;
+	const lastInfoGetter = useRef(infoGetter);
+	lastInfoGetter.current = infoGetter;
 
-  const lastCallback = useRef(callback);
-  lastCallback.current = callback;
+	const lastCallback = useRef(callback);
+	lastCallback.current = callback;
 
-  const lastElement = useRef(element);
-  lastElement.current = element;
+	const lastElement = useRef(element);
+	lastElement.current = element;
 
-  const delegatedCallback = useCallback((...args: T) => {
-    if (typeof lastCallback.current !== 'function') return;
+	const delegatedCallback = useCallback((...args: T) => {
+		if (typeof lastCallback.current !== "function") return;
 
-    const event = args[0];
-    let element =
-      typeof event === 'object' && event !== null && 'currentTarget' in event
-        ? (event.currentTarget as HTMLElement)
-        : null;
-    if (!element || !(element instanceof HTMLElement))
-      element = lastElement.current || null;
-    if (!element || !(element instanceof HTMLElement))
-      element = window.event?.target as HTMLElement;
-    if (!(element instanceof HTMLElement)) element = null;
+		const event = args[0];
+		let element =
+			typeof event === "object" && event !== null && "currentTarget" in event
+				? (event.currentTarget as HTMLElement)
+				: null;
+		if (!element || !(element instanceof HTMLElement))
+			element = lastElement.current || null;
+		if (!element || !(element instanceof HTMLElement))
+			element = window.event?.target as HTMLElement;
+		if (!(element instanceof HTMLElement)) element = null;
 
-    const info = lastInfoGetter.current(...args);
+		const info = lastInfoGetter.current(...args);
 
-    const reportErrorAndRethrow = (error: unknown) => {
-      reportElementError(element, error, info);
-      throw error;
-    };
+		const reportErrorAndRethrow = (error: unknown) => {
+			reportElementError(element, error, info);
+			throw error;
+		};
 
-    try {
-      reportUIElementEvent(element, info);
+		try {
+			reportUIElementEvent(element, info);
 
-      // biome-ignore lint/suspicious/noExplicitAny: hard to type
-      const ans = lastCallback.current(...args) as any;
-      if (ans instanceof Promise) ans.catch(reportErrorAndRethrow);
-    } catch (error) {
-      reportErrorAndRethrow(error);
-    }
-  }, []);
+			// biome-ignore lint/suspicious/noExplicitAny: hard to type
+			const ans = lastCallback.current(...args) as any;
+			if (ans instanceof Promise) ans.catch(reportErrorAndRethrow);
+		} catch (error) {
+			reportErrorAndRethrow(error);
+		}
+	}, []);
 
-  return delegatedCallback;
+	return delegatedCallback;
 }
 
 function reportUIElementEvent(
-  element: HTMLElement | null,
-  info: Partial<IFrameUIEventMessage>
+	element: HTMLElement | null,
+	info: Partial<IFrameUIEventMessage>,
 ) {
-  const report: IFrameUIEventMessage = {
-    type: 'ui-event',
-    timestamp: Date.now().toString(),
-    ...info,
-    source: getSourceFromElement(element),
-  };
+	const report: IFrameUIEventMessage = {
+		type: "ui-event",
+		timestamp: Date.now().toString(),
+		...info,
+		source: getSourceFromElement(element),
+	};
 
-  reportToParentWindow(report);
+	reportToParentWindow(report);
 }
 
 /**
  * Report UI element error to parent window
  */
 export function reportElementError(
-  element: HTMLElement | null,
-  error: unknown,
-  info?: Partial<IFrameErrorMessage>
+	element: HTMLElement | null,
+	error: unknown,
+	info?: Partial<IFrameErrorMessage>,
 ) {
-  // Get error details
-  const errorObj = error instanceof Error ? error : new Error(String(error));
+	// Get error details
+	const errorObj = error instanceof Error ? error : new Error(String(error));
 
-  const errorReport: IFrameErrorMessage = {
-    type: 'error',
-    timestamp: Date.now().toString(),
-    error: {
-      message: String(error),
-      stack: errorObj.stack,
-    },
-    source: getSourceFromElement(element),
-    ...info,
-  };
+	const errorReport: IFrameErrorMessage = {
+		type: "error",
+		timestamp: Date.now().toString(),
+		error: {
+			message: String(error),
+			stack: errorObj.stack,
+		},
+		source: getSourceFromElement(element),
+		...info,
+	};
 
-  // Send report to parent window
-  reportToParentWindow(errorReport);
-  console.log('Element error, reporting to parent:', errorReport);
+	// Send report to parent window
+	reportToParentWindow(errorReport);
+	console.log("Element error, reporting to parent:", errorReport);
 
-  return errorReport;
+	return errorReport;
 }
 
 export function reportError(
-  error: unknown,
-  info?: Partial<IFrameErrorMessage>
+	error: unknown,
+	info?: Partial<IFrameErrorMessage>,
 ) {
-  const errorObj = error instanceof Error ? error : new Error(String(error));
-  const errorReport: IFrameErrorMessage = {
-    type: 'error',
-    timestamp: Date.now().toString(),
-    error: {
-      message: String(error),
-      stack: errorObj.stack,
-    },
-    ...info,
-  };
+	const errorObj = error instanceof Error ? error : new Error(String(error));
+	const errorReport: IFrameErrorMessage = {
+		type: "error",
+		timestamp: Date.now().toString(),
+		error: {
+			message: String(error),
+			stack: errorObj.stack,
+		},
+		...info,
+	};
 
-  reportToParentWindow(errorReport);
-  console.log('Error, reporting to parent:', errorReport);
-  return errorReport;
+	reportToParentWindow(errorReport);
+	console.log("Error, reporting to parent:", errorReport);
+	return errorReport;
 }
 
-window.addEventListener('unhandledrejection', (event) => {
-  reportError(event.reason, { eventType: 'window.unhandledrejection' });
+window.addEventListener("unhandledrejection", (event) => {
+	reportError(event.reason, { eventType: "window.unhandledrejection" });
 });
 
-window.addEventListener('error', (event) => {
-  reportError(event.error, { eventType: 'window.error' });
+window.addEventListener("error", (event) => {
+	reportError(event.error, { eventType: "window.error" });
 });
 
 /**
@@ -245,44 +245,44 @@ window.addEventListener('error', (event) => {
  * @returns Object with report function to send messages to parent window
  */
 export function useReportToParentWindow() {
-  const messageQueue = useRef<IFrameMessage[]>([]);
-  const throttledReport = useMemo(
-    () =>
-      throttle(() => {
-        const parentWindow = window.parent;
-        if (parentWindow === window || messageQueue.current.length === 0) {
-          return;
-        }
-        for (const message of messageQueue.current) {
-          parentWindow.postMessage(
-            {
-              ...message,
-              timestamp: Date.now(),
-            },
-            '*'
-          );
-        }
-        messageQueue.current = [];
-      }, 200),
-    []
-  );
+	const messageQueue = useRef<IFrameMessage[]>([]);
+	const throttledReport = useMemo(
+		() =>
+			throttle(() => {
+				const parentWindow = window.parent;
+				if (parentWindow === window || messageQueue.current.length === 0) {
+					return;
+				}
+				for (const message of messageQueue.current) {
+					parentWindow.postMessage(
+						{
+							...message,
+							timestamp: Date.now(),
+						},
+						"*",
+					);
+				}
+				messageQueue.current = [];
+			}, 200),
+		[],
+	);
 
-  // Queue a message to be sent to parent window
-  const reportParent = useCallback(
-    (message: IFrameMessage) => {
-      messageQueue.current.push(message);
-      throttledReport();
-    },
-    [throttledReport]
-  );
+	// Queue a message to be sent to parent window
+	const reportParent = useCallback(
+		(message: IFrameMessage) => {
+			messageQueue.current.push(message);
+			throttledReport();
+		},
+		[throttledReport],
+	);
 
-  useEffect(() => {
-    return () => {
-      throttledReport.flush();
-    };
-  }, [throttledReport]);
+	useEffect(() => {
+		return () => {
+			throttledReport.flush();
+		};
+	}, [throttledReport]);
 
-  return { reportParent };
+	return { reportParent };
 }
 
 /**
@@ -290,16 +290,16 @@ export function useReportToParentWindow() {
  * @param message Message to send to parent window
  */
 export function reportToParentWindow(message: IFrameMessage): void {
-  const parentWindow = window.parent;
-  if (parentWindow === window) {
-    return;
-  }
+	const parentWindow = window.parent;
+	if (parentWindow === window) {
+		return;
+	}
 
-  parentWindow.postMessage(
-    {
-      ...message,
-      timestamp: Date.now(),
-    },
-    '*'
-  );
+	parentWindow.postMessage(
+		{
+			...message,
+			timestamp: Date.now(),
+		},
+		"*",
+	);
 }

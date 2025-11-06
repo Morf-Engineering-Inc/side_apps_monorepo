@@ -2,10 +2,10 @@
 /// <reference types="vite-plugin-svgr/client" />
 
 interface ImportMetaEnv {
-  readonly TENANT_ID?: string;
-  // add more env vars as needed
+	readonly TENANT_ID?: string;
+	// add more env vars as needed
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv;
+	readonly env: ImportMetaEnv;
 }

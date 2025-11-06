@@ -3,60 +3,60 @@
  */
 
 export type IFrameMessage =
-  | IFrameErrorMessage //
-  | IFrameMCPMessage //
-  | IFrameUIEventMessage;
+	| IFrameErrorMessage //
+	| IFrameMCPMessage //
+	| IFrameUIEventMessage;
 
 /** a error */
 export interface IFrameErrorMessage {
-  type: 'error';
-  timestamp: string; // new Date().toISOString()
+	type: "error";
+	timestamp: string; // new Date().toISOString()
 
-  error: IFrameError;
-  source?: IFrameSource;
+	error: IFrameError;
+	source?: IFrameSource;
 
-  mcpRequest?: IFrameMCPRequest;
-  componentType?: string; // eg: "Button"
-  componentInfo?: Record<string, unknown>;
-  eventType?: string; // eg: "click"
+	mcpRequest?: IFrameMCPRequest;
+	componentType?: string; // eg: "Button"
+	componentInfo?: Record<string, unknown>;
+	eventType?: string; // eg: "click"
 }
 
 /** a successful mcp request */
 export interface IFrameMCPMessage {
-  type: 'mcp';
-  // timestamp: string; // new Date().toISOString()
+	type: "mcp";
+	// timestamp: string; // new Date().toISOString()
 
-  // mcpRequest: IFrameMCPRequest;
-  // mcpResponse: Record<string, unknown>;
+	// mcpRequest: IFrameMCPRequest;
+	// mcpResponse: Record<string, unknown>;
 
-  [key: string]: unknown; // FIXME: unused - clean existing code later!
+	[key: string]: unknown; // FIXME: unused - clean existing code later!
 }
 
 /** a ui event */
 export interface IFrameUIEventMessage {
-  type: 'ui-event';
-  timestamp: string; // new Date().toISOString()
+	type: "ui-event";
+	timestamp: string; // new Date().toISOString()
 
-  componentType?: string; // eg: "Button"
-  eventType?: string; // eg: "click"
-  source?: IFrameSource;
+	componentType?: string; // eg: "Button"
+	eventType?: string; // eg: "click"
+	source?: IFrameSource;
 }
 
 type IFrameError = {
-  message: string;
-  stack?: string;
+	message: string;
+	stack?: string;
 };
 
 type IFrameMCPRequest = {
-  serverUrl: string;
-  method: string;
-  url: string;
-  transportType: string;
-  params?: unknown;
+	serverUrl: string;
+	method: string;
+	url: string;
+	transportType: string;
+	params?: unknown;
 };
 
 type IFrameSource = {
-  filePath: string; // eg: "/src/foo.tsx"
-  line?: number; // eg: 10
-  column?: number; // eg: 12
+	filePath: string; // eg: "/src/foo.tsx"
+	line?: number; // eg: 10
+	column?: number; // eg: 12
 };

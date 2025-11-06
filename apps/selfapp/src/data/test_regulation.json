@@ -1,32 +1,32 @@
 [
-    {
-        "id": "log_001",
-        "timestamp": "2025-11-06T11:28:00-07:00",
-        "trigger_id": "work.interruptions",
-        "emotion_family": "Anger",
-        "emotion_term": "frustration",
-        "impulse_id": "imp.lash_out",
-        "chosen_action_note": "I paused, took 2 breaths, and asked calmly if we could finish this after my current task.",
-        "identity_alignment_tag": "align.outward"
-    },
-    {
-        "id": "log_002",
-        "timestamp": "2025-11-06T14:10:00-07:00",
-        "trigger_id": "dig.social_media_comparison",
-        "emotion_family": "Sadness",
-        "emotion_term": "loneliness",
-        "impulse_id": "imp.scroll",
-        "chosen_action_note": "I closed the app and texted one friend to encourage them in something they’re building.",
-        "identity_alignment_tag": "align.outward"
-    },
-    {
-        "id": "log_003",
-        "timestamp": "2025-11-06T23:52:00-07:00",
-        "trigger_id": "time.late_night",
-        "emotion_family": "Fear",
-        "emotion_term": "unease",
-        "impulse_id": "imp.binge",
-        "chosen_action_note": "I gave in for 20 minutes — but then turned off TV, prayed 60 seconds of gratitude, and went to bed.",
-        "identity_alignment_tag": "align.inward"
-    }
+	{
+		"id": "log_001",
+		"timestamp": "2025-11-06T11:28:00-07:00",
+		"trigger_id": "work.interruptions",
+		"emotion_family": "Anger",
+		"emotion_term": "frustration",
+		"impulse_id": "imp.lash_out",
+		"chosen_action_note": "I paused, took 2 breaths, and asked calmly if we could finish this after my current task.",
+		"identity_alignment_tag": "align.outward"
+	},
+	{
+		"id": "log_002",
+		"timestamp": "2025-11-06T14:10:00-07:00",
+		"trigger_id": "dig.social_media_comparison",
+		"emotion_family": "Sadness",
+		"emotion_term": "loneliness",
+		"impulse_id": "imp.scroll",
+		"chosen_action_note": "I closed the app and texted one friend to encourage them in something they’re building.",
+		"identity_alignment_tag": "align.outward"
+	},
+	{
+		"id": "log_003",
+		"timestamp": "2025-11-06T23:52:00-07:00",
+		"trigger_id": "time.late_night",
+		"emotion_family": "Fear",
+		"emotion_term": "unease",
+		"impulse_id": "imp.binge",
+		"chosen_action_note": "I gave in for 20 minutes — but then turned off TV, prayed 60 seconds of gratitude, and went to bed.",
+		"identity_alignment_tag": "align.inward"
+	}
 ]
