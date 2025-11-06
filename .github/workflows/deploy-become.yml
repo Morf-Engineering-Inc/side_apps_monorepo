@@ -145,42 +145,10 @@ jobs:
               --tags "Key=${{ env.APP_TAG_KEY }},Value=${APP_ARN}" "Key=Name,Value=${TF_STATE_LOCK_TABLE}" "Key=Purpose,Value=TerraformStateLock"
           fi
 
-      - name: Build Lambda functions
+      - name: Build selfapp frontend
         run: |
-          # Build Lambda layer with dependencies
-          cd lambda/layers
-          pnpm install --prod
-          mkdir -p nodejs
-          cp -r node_modules nodejs/
-          cd nodejs
-          zip -r ../dependencies.zip .
-          cd ..
-          rm -rf nodejs
-
-          # Build API handler function
-          cd ../functions/api-handler
-          mkdir -p build
-          cp index.js build/
-          cp -r ../../shared build/
-          cd build
-          zip -r ../../api-handler.zip .
-          cd ..
-          rm -rf build
-
-          # Build Auth handler function
-          cd ../auth-handler
-          mkdir -p build
-          cp index.js build/
-          cp -r ../../shared build/
-          cd build
-          zip -r ../../auth-handler.zip .
-          cd ..
-          rm -rf build
-
-      - name: Build frontend
-        run: |
-          pnpm install
-          pnpm run build
+          pnpm install --filter selfapp
+          pnpm --filter selfapp build
 
       - name: Terraform Init
         run: terraform init
@@ -275,7 +243,7 @@ jobs:
 
       - name: Create frontend config
         run: |
-          cat > ./dist/public/config.js << EOF
+          cat > ./apps/selfapp/dist/config.js << EOF
           window.AWS_CONFIG = {
             apiUrl: '${{ steps.tf_outputs.outputs.api_url }}',
             cognitoUserPoolId: '${{ steps.tf_outputs.outputs.cognito_user_pool_id }}',
@@ -287,7 +255,7 @@ jobs:
       - name: Deploy frontend to S3
         run: |
           echo "Deploying frontend files to S3..."
-          aws s3 sync ./dist/public s3://${{ steps.tf_outputs.outputs.s3_bucket }} \
+          aws s3 sync ./apps/selfapp/dist s3://${{ steps.tf_outputs.outputs.s3_bucket }} \
             --delete \
             --cache-control "public, max-age=3600" \
             --exclude "*.html" \
@@ -296,8 +264,8 @@ jobs:
 
           echo "Setting correct content types for HTML and config files..."
           # Upload HTML files with no-cache
-          find ./dist/public -name "*.html" -type f | while read file; do
-            key="${file#./dist/public/}"
+          find ./apps/selfapp/dist -name "*.html" -type f | while read file; do
+            key="${file#./apps/selfapp/dist/}"
             aws s3 cp "$file" "s3://${{ steps.tf_outputs.outputs.s3_bucket }}/$key" \
               --content-type "text/html" \
               --cache-control "no-cache, no-store, must-revalidate" \
@@ -306,8 +274,8 @@ jobs:
           done
 
           # Upload config.js with no-cache
-          if [ -f ./dist/public/config.js ]; then
-            aws s3 cp ./dist/public/config.js \
+          if [ -f ./apps/selfapp/dist/config.js ]; then
+            aws s3 cp ./apps/selfapp/dist/config.js \
               s3://${{ steps.tf_outputs.outputs.s3_bucket }}/config.js \
               --content-type "application/javascript" \
               --cache-control "no-cache, no-store, must-revalidate" \
