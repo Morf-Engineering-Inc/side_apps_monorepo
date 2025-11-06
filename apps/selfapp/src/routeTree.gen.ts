@@ -16,6 +16,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LetgodRouteImport } from './routes/letgod'
 import { Route as JwtDebugRouteImport } from './routes/jwt-debug'
+import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as BecomeRouteImport } from './routes/become'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -54,6 +55,11 @@ const JwtDebugRoute = JwtDebugRouteImport.update({
   path: '/jwt-debug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CallbackRoute = CallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BecomeRoute = BecomeRouteImport.update({
   id: '/become',
   path: '/become',
@@ -68,6 +74,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/become': typeof BecomeRoute
+  '/callback': typeof CallbackRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/become': typeof BecomeRoute
+  '/callback': typeof CallbackRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/become': typeof BecomeRoute
+  '/callback': typeof CallbackRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/become'
+    | '/callback'
     | '/jwt-debug'
     | '/letgod'
     | '/login'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/become'
+    | '/callback'
     | '/jwt-debug'
     | '/letgod'
     | '/login'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/become'
+    | '/callback'
     | '/jwt-debug'
     | '/letgod'
     | '/login'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BecomeRoute: typeof BecomeRoute
+  CallbackRoute: typeof CallbackRoute
   JwtDebugRoute: typeof JwtDebugRoute
   LetgodRoute: typeof LetgodRoute
   LoginRoute: typeof LoginRoute
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JwtDebugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/callback': {
+      id: '/callback'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/become': {
       id: '/become'
       path: '/become'
@@ -218,6 +238,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BecomeRoute: BecomeRoute,
+  CallbackRoute: CallbackRoute,
   JwtDebugRoute: JwtDebugRoute,
   LetgodRoute: LetgodRoute,
   LoginRoute: LoginRoute,
