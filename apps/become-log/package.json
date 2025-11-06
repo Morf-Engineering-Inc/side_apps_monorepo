@@ -1,0 +1,19 @@
+{
+  "name": "become-log",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BecomeLog - Personal transformation tracking and journaling",
+  "scripts": {
+    "dev": "echo 'Dev server not configured yet'",
+    "build": "npm run build:copy",
+    "build:copy": "mkdir -p ../../dist/public && cp -r src/* ../../dist/public/",
+    "clean": "rm -rf ../../dist/public"
+  },
+  "keywords": [
+    "journaling",
+    "personal-growth",
+    "transformation"
+  ],
+  "author": "",
+  "license": "MIT"
+}

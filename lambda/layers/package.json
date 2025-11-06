@@ -1,0 +1,7 @@
+{
+  "name": "become-log-lambda-layer",
+  "version": "1.0.0",
+  "description": "Lambda layer with shared dependencies for BecomeLog",
+  "private": true,
+  "dependencies": {}
+}
