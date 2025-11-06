@@ -1,101 +1,67 @@
 {
-    "christlike_ladder": {
-        "apex": "charity",
-        "clusters_in_order": [
-            {
-                "rank": 1,
-                "name": "faith in Jesus Christ",
-                "sources": [
-                    "2 Peter 1:5",
-                    "Moroni 7",
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 2,
-                "name": "virtue (purity of intent)",
-                "sources": [
-                    "2 Peter 1:5",
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 3,
-                "name": "knowledge (light + truth)",
-                "sources": [
-                    "2 Peter 1:5",
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 4,
-                "name": "temperance (self-governance)",
-                "sources": [
-                    "2 Peter 1:6"
-                ]
-            },
-            {
-                "rank": 5,
-                "name": "patience",
-                "sources": [
-                    "2 Peter 1:6",
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 6,
-                "name": "godliness (Christlike reverence)",
-                "sources": [
-                    "2 Peter 1:6"
-                ]
-            },
-            {
-                "rank": 7,
-                "name": "brotherly kindness",
-                "sources": [
-                    "2 Peter 1:7"
-                ]
-            },
-            {
-                "rank": 8,
-                "name": "hope",
-                "sources": [
-                    "1 Cor 13:13",
-                    "Moroni 7",
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 9,
-                "name": "humility",
-                "sources": [
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 10,
-                "name": "obedience",
-                "sources": [
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 11,
-                "name": "diligence",
-                "sources": [
-                    "PMG"
-                ]
-            },
-            {
-                "rank": 12,
-                "name": "charity (pure love of Christ)",
-                "sources": [
-                    "2 Peter 1:7",
-                    "1 Cor 13",
-                    "Moroni 7",
-                    "PMG"
-                ]
-            }
-        ]
-    }
+	"christlike_ladder": {
+		"apex": "charity",
+		"clusters_in_order": [
+			{
+				"rank": 1,
+				"name": "faith in Jesus Christ",
+				"sources": ["2 Peter 1:5", "Moroni 7", "PMG"]
+			},
+			{
+				"rank": 2,
+				"name": "virtue (purity of intent)",
+				"sources": ["2 Peter 1:5", "PMG"]
+			},
+			{
+				"rank": 3,
+				"name": "knowledge (light + truth)",
+				"sources": ["2 Peter 1:5", "PMG"]
+			},
+			{
+				"rank": 4,
+				"name": "temperance (self-governance)",
+				"sources": ["2 Peter 1:6"]
+			},
+			{
+				"rank": 5,
+				"name": "patience",
+				"sources": ["2 Peter 1:6", "PMG"]
+			},
+			{
+				"rank": 6,
+				"name": "godliness (Christlike reverence)",
+				"sources": ["2 Peter 1:6"]
+			},
+			{
+				"rank": 7,
+				"name": "brotherly kindness",
+				"sources": ["2 Peter 1:7"]
+			},
+			{
+				"rank": 8,
+				"name": "hope",
+				"sources": ["1 Cor 13:13", "Moroni 7", "PMG"]
+			},
+			{
+				"rank": 9,
+				"name": "humility",
+				"sources": ["PMG"]
+			},
+			{
+				"rank": 10,
+				"name": "obedience",
+				"sources": ["PMG"]
+			},
+			{
+				"rank": 11,
+				"name": "diligence",
+				"sources": ["PMG"]
+			},
+			{
+				"rank": 12,
+				"name": "charity (pure love of Christ)",
+				"sources": ["2 Peter 1:7", "1 Cor 13", "Moroni 7", "PMG"]
+			}
+		]
+	}
 }
