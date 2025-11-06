@@ -29,7 +29,9 @@ if [ -f package.json ]; then
   
   # Install dependencies if any are defined
   cd "$LAYER_BUILD_DIR/nodejs"
-  if [ -s package.json ] && grep -q '"dependencies"' package.json; then
+  # Check if package.json has dependencies using node (more reliable than grep)
+  HAS_DEPS=$(node -pe "Object.keys(require('./package.json').dependencies || {}).length > 0")
+  if [ "$HAS_DEPS" = "true" ]; then
     echo "Installing layer dependencies..."
     npm install --production --no-package-lock
   fi
@@ -65,7 +67,13 @@ build_function() {
   # Copy shared utilities if they exist
   if [ -d "$LAMBDA_DIR/shared" ]; then
     mkdir -p "$function_build_dir/shared"
-    cp "$LAMBDA_DIR/shared"/*.js "$function_build_dir/shared/" 2>/dev/null || true
+    # Copy .js files, verify at least one was copied
+    if ls "$LAMBDA_DIR/shared"/*.js 1> /dev/null 2>&1; then
+      cp "$LAMBDA_DIR/shared"/*.js "$function_build_dir/shared/"
+      echo "  Copied shared utilities"
+    else
+      echo "  Warning: No .js files found in shared directory"
+    fi
   fi
   
   # Create zip file in the functions directory (not inside the function subdirectory)
