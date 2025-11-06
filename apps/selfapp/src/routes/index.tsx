@@ -956,7 +956,7 @@ function Insights() {
                     {topSkills.map(([skill, count]) => (
                       <div
                         key={skill}
-                        className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                        className="flex items-center justify-between p-3 rounded-lg app-bg-surface-alt border app-border-default"
                       >
                         <span className="font-medium app-text-strong">
                           {skill}
@@ -978,7 +978,7 @@ function Insights() {
                     {topStrengths.map(([strength, count]) => (
                       <div
                         key={strength}
-                        className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                        className="flex items-center justify-between p-3 rounded-lg app-bg-surface-alt border app-border-default"
                       >
                         <span className="font-medium app-text-strong">
                           {strength}
