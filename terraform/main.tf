@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.9.0"
-  
+
   backend "s3" {
     bucket         = "become-log-terraform-state"
     key            = "terraform.tfstate"
@@ -22,10 +22,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "BecomeLog"
-      ManagedBy   = "Terraform"
-      Environment = var.environment
-      Application = var.app_name
+      Project        = "BecomeLog"
+      ManagedBy      = "Terraform"
+      Environment    = var.environment
+      Application    = var.app_name
       awsApplication = var.aws_application_tag
     }
   }

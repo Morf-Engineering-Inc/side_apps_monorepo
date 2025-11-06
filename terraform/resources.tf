@@ -158,6 +158,30 @@ resource "aws_cognito_user_pool_client" "main" {
   ]
 
   prevent_user_existence_errors = "ENABLED"
+
+  # OAuth 2.0 Configuration for Hosted UI
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
+
+  # Callback URLs - will be updated after CloudFront is created
+  callback_urls = [
+    "https://${aws_cloudfront_distribution.frontend.domain_name}/callback",
+    "http://localhost:3003/callback"
+  ]
+
+  logout_urls = [
+    "https://${aws_cloudfront_distribution.frontend.domain_name}/",
+    "http://localhost:3003/"
+  ]
+
+  supported_identity_providers = ["COGNITO"]
+}
+
+# Cognito User Pool Domain
+resource "aws_cognito_user_pool_domain" "main" {
+  domain       = "${var.app_name}-${var.environment}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 # Lambda Layer
@@ -250,9 +274,11 @@ resource "aws_apigatewayv2_api" "main" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    # TODO: Restrict to specific domains in production
-    # For initial deployment, allowing all origins for testing
-    allow_origins = ["*"]
+    # Allow CloudFront domain and localhost for development
+    allow_origins = [
+      "https://${aws_cloudfront_distribution.frontend.domain_name}",
+      "http://localhost:3003"
+    ]
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers = ["Content-Type", "Authorization"]
     max_age       = 300
