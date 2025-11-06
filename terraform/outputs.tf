@@ -27,3 +27,8 @@ output "cognito_client_id" {
   description = "ID of the Cognito User Pool Client"
   value       = aws_cognito_user_pool_client.main.id
 }
+
+output "cognito_domain" {
+  description = "Cognito Hosted UI domain"
+  value       = "${aws_cognito_user_pool_domain.main.domain}.auth.${var.aws_region}.amazoncognito.com"
+}

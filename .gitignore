@@ -79,3 +79,12 @@ out/
 
 # Zip files
 *.zip
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraformrc
+terraform.rc

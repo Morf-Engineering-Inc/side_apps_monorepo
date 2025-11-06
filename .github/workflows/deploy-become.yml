@@ -75,11 +75,16 @@ jobs:
           # Get the application ARN for use in resource tagging
           APP_ARN=$(aws servicecatalog-appregistry get-application \
             --application "${{ env.APP_NAME }}" \
-            --query 'applicationTag.awsApplication' \
+            --query 'application.arn' \
             --output text)
 
-          echo "Application Resource Group ARN: $APP_ARN"
+          echo "Application ARN: $APP_ARN"
           echo "APP_ARN=$APP_ARN" >> $GITHUB_ENV
+
+          # Get the associated Resource Group name
+          RG_NAME="AWS_AppRegistry_Application-${{ env.APP_NAME }}"
+          echo "Resource Group Name: $RG_NAME"
+          echo "RG_NAME=$RG_NAME" >> $GITHUB_ENV
 
       - name: Ensure Terraform backend infrastructure
         run: |
@@ -166,13 +171,12 @@ jobs:
         id: plan
         run: terraform plan -out=tfplan
         working-directory: ./terraform
-        continue-on-error: true
         env:
           TF_VAR_app_name: ${{ env.APP_NAME }}
           TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
 
       - name: Terraform Apply
-        if: steps.plan.outcome == 'success'
+        if: ${{ success() }}
         run: terraform apply -auto-approve tfplan
         working-directory: ./terraform
         env:
@@ -184,10 +188,11 @@ jobs:
         run: |
           echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
           echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "cloudfront_url=$(terraform output -raw cloudfront_url)" >> $GITHUB_OUTPUT
           echo "api_url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
           echo "cognito_user_pool_id=$(terraform output -raw cognito_user_pool_id)" >> $GITHUB_OUTPUT
           echo "cognito_client_id=$(terraform output -raw cognito_client_id)" >> $GITHUB_OUTPUT
-          echo "cloudfront_url=$(terraform output -raw cloudfront_url)" >> $GITHUB_OUTPUT
+          echo "cognito_domain=$(terraform output -raw cognito_domain)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
 
       - name: Associate Terraform-created resources with AppRegistry
@@ -195,6 +200,20 @@ jobs:
           set -euo pipefail
 
           echo "Associating resources with AppRegistry application..."
+
+          # Get the Resource Group ARN
+          RG_ARN=$(aws resource-groups get-group \
+            --group-name "${{ env.RG_NAME }}" \
+            --query 'Group.GroupArn' \
+            --output text 2>/dev/null || echo "")
+
+          if [ -z "$RG_ARN" ]; then
+            echo "⚠️  Resource Group not found yet. It will be created automatically by AppRegistry."
+            echo "Resources will be associated on next deployment."
+            exit 0
+          fi
+
+          echo "Resource Group ARN: $RG_ARN"
 
           # Get all resources created by Terraform with the awsApplication tag
           RESOURCES=$(aws resourcegroupstaggingapi get-resources \
@@ -205,11 +224,11 @@ jobs:
           if [ -n "$RESOURCES" ]; then
             echo "Found $(echo $RESOURCES | wc -w) resources to associate"
             
-            # Associate resources with the application resource group
+            # Associate resources with the Resource Group
             for RESOURCE_ARN in $RESOURCES; do
               echo "Associating: $RESOURCE_ARN"
               aws resource-groups group-resources \
-                --group "${APP_ARN}" \
+                --group "${{ env.RG_NAME }}" \
                 --resource-arns "$RESOURCE_ARN" 2>/dev/null || true
             done
             
@@ -248,12 +267,17 @@ jobs:
 
       - name: Create frontend config
         run: |
-          cat > ./apps/selfapp/dist/config.js << EOF
+          cat > ./apps/selfapp/dist/config.js << 'EOF'
           window.AWS_CONFIG = {
             apiUrl: '${{ steps.tf_outputs.outputs.api_url }}',
+            region: '${{ env.AWS_REGION }}',
             cognitoUserPoolId: '${{ steps.tf_outputs.outputs.cognito_user_pool_id }}',
             cognitoClientId: '${{ steps.tf_outputs.outputs.cognito_client_id }}',
-            region: '${{ env.AWS_REGION }}'
+            cognitoDomain: '${{ steps.tf_outputs.outputs.cognito_domain }}',
+            redirectSignIn: '${{ steps.tf_outputs.outputs.cloudfront_url }}/callback',
+            redirectSignOut: '${{ steps.tf_outputs.outputs.cloudfront_url }}/',
+            responseType: 'code',
+            scopes: ['openid', 'email', 'profile']
           };
           EOF
 
@@ -385,6 +409,7 @@ jobs:
           echo "### 🔐 Cognito Details" >> $GITHUB_STEP_SUMMARY
           echo "- **User Pool ID**: ${{ steps.tf_outputs.outputs.cognito_user_pool_id }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Client ID**: ${{ steps.tf_outputs.outputs.cognito_client_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Hosted UI Domain**: https://${{ steps.tf_outputs.outputs.cognito_domain }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Visit the CloudFront URL to access BecomeLog" >> $GITHUB_STEP_SUMMARY
