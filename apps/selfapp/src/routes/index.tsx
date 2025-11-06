@@ -33,40 +33,25 @@ import {
   User,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import SpiritualProgressTracker from '@/components/BecomeTool';
-import SideNav from '@/components/SideNav';
 
 interface ExtendedDailyLogEntryModel extends DailyLogEntryModel {
   tasks?: Task[] | null;
 }
 
-// ... existing code ...
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import JSZip from 'jszip';
-
-// ... existing code ...
 export const Route = createFileRoute('/')({
   component: Index,
 });
 
 function Index() {
   const [activeTab, setActiveTab] = useState('log');
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
-  const handleTabChange = (value: string) => {
-    if (value === 'become') {
-      navigate({ to: '/become' });
-    } else if (value === 'selfreg' || value === 'letgod') {
-      navigate({ to: '/selfreg' });
-    } else {
-      setActiveTab(value);
-    }
-  };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="log">Daily Log</TabsTrigger>
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        <TabsTrigger value="insights">Insights</TabsTrigger>
+      </TabsList>
       <TabsContent value="log">
         <DailyLogForm />
       </TabsContent>
@@ -77,238 +62,6 @@ function Index() {
         <Insights />
       </TabsContent>
     </Tabs>
-  );
-}
-
-function DailyLogForm() {
-// ... existing code ...
-
-function App() {
-  const { user, logout, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('log');
-  const [loadingMock, setLoadingMock] = useState(false);
-  const [mockMessage, setMockMessage] = useState('');
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate({ to: '/login' });
-    }
-  }, [isAuthenticated, navigate]);
-
-  const loadMockData = async () => {
-    setLoadingMock(true);
-    setMockMessage('');
-    try {
-      const orm = DailyLogEntryORM.getInstance();
-      await orm.insertDailyLogEntry(mockLogs as DailyLogEntryModel[]);
-      setMockMessage('✓ 7 days of mock data loaded successfully!');
-      setTimeout(() => setMockMessage(''), 5000);
-    } catch (error) {
-      setMockMessage('Error loading mock data. Please try again.');
-      console.error('Error loading mock data:', error);
-    } finally {
-      setLoadingMock(false);
-    }
-  };
-
-  const removeMockData = async () => {
-    setLoadingMock(true);
-    setMockMessage('');
-    try {
-      const orm = DailyLogEntryORM.getInstance();
-      const allEntries = await orm.getAllDailyLogEntry();
-      const mockDates = mockLogs.map((log) => log.date);
-      const entriesToDelete = allEntries.filter((entry) =>
-        mockDates.includes(entry.date)
-      );
-
-      for (const entry of entriesToDelete) {
-        await orm.deleteDailyLogEntryByDate(entry.date);
-      }
-
-      setMockMessage(
-        `✓ Removed ${entriesToDelete.length} mock data entries successfully!`
-      );
-      setTimeout(() => setMockMessage(''), 5000);
-    } catch (error) {
-      setMockMessage('Error removing mock data. Please try again.');
-      console.error('Error removing mock data:', error);
-    } finally {
-      setLoadingMock(false);
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate({ to: '/login' });
-  };
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-[var(--bg-app)] p-4 md:p-8">
-      <div className="bg-grid min-h-screen">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
-          <SideNav
-            active={activeTab}
-            onChange={(v) => {
-              if (['log', 'dashboard', 'insights'].includes(v)) {
-                setActiveTab(v);
-              }
-
-              // Navigation for other items handled by SideNav
-            }}
-          />
-          <main className="md:col-span-9 lg:col-span-9">
-            <div className="max-w-4xl mx-auto">
-              <header className="mb-8">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-                      Performance Tracker
-                    </h1>
-                    <p className="text-zinc-600 dark:text-zinc-400">
-                      Track daily goals, analyze patterns, and improve
-                      consistently
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 items-end">
-                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 mb-2">
-                      <User className="h-4 w-4" />
-                      <span>{user?.name}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={loadMockData}
-                        disabled={loadingMock}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Database className="mr-2 h-4 w-4" />
-                        {loadingMock ? 'Loading...' : 'Load Mock'}
-                      </Button>
-                      <Button
-                        onClick={removeMockData}
-                        disabled={loadingMock}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Database className="mr-2 h-4 w-4" />
-                        Remove Mock
-                      </Button>
-                      <Button
-                        onClick={() => navigate({ to: '/become' })}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Become
-                      </Button>
-                      <Button
-                        onClick={() => navigate({ to: '/selfreg' })}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Self-Reg
-                      </Button>
-                      <Button
-                        onClick={handleLogout}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                      </Button>
-                    </div>
-                    {mockMessage && (
-                      <p
-                        className={`text-xs ${mockMessage.includes('Error') ? 'text-red-600' : 'text-green-600'}`}
-                      >
-                        {mockMessage}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </header>
-
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mb-6">
-                  <TabsTrigger value="log">
-                    <Calendar className="mr-2" />
-                    Daily Log
-                  </TabsTrigger>
-                  <TabsTrigger value="dashboard">
-                    <BarChart3 className="mr-2" />
-                    Dashboard
-                  </TabsTrigger>
-                  <TabsTrigger value="become">
-                    <BookOpen className="mr-2" />
-                    Become
-                  </TabsTrigger>
-                  <TabsTrigger value="letgod">
-                    <BookOpen className="mr-2" />
-                    Let God Prevail
-                  </TabsTrigger>
-                  <TabsTrigger value="insights">
-                    <Brain className="mr-2" />
-                    Insights
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="log">
-                  <DailyLogForm />
-                </TabsContent>
-
-                <TabsContent value="dashboard">
-                  <Dashboard />
-                </TabsContent>
-
-                <TabsContent value="become">
-                  <SpiritualProgressTracker />
-                </TabsContent>
-
-                <TabsContent value="letgod">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Let God Prevail</CardTitle>
-                      <CardDescription>
-                        A short practice: choose an outward act of service or an
-                        inward guard of the heart. Track moments with the
-                        Self-Reg log.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <p className="text-zinc-700 dark:text-zinc-300">
-                          This tab links to the "Log a Moment of Becoming" flow.
-                          Small choices under pressure shape identity.
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => navigate({ to: '/selfreg' })}
-                            variant="default"
-                          >
-                            Open Self-Reg Log
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="insights">
-                  <Insights />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </main>
-        </div>
-      </div>
-    </div>
   );
 }
 

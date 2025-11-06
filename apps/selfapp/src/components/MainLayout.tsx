@@ -54,8 +54,10 @@ export function MainLayout() {
             </div>
           </header>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <SideNav />
-            <main className="md:col-span-9 lg:col-span-9">
+            <div className="md:col-span-3">
+              <SideNav />
+            </div>
+            <main className="md:col-span-9">
               <Outlet />
             </main>
           </div>

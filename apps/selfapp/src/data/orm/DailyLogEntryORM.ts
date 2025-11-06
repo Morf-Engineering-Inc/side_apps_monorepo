@@ -1,4 +1,5 @@
-import Dexie, { type Table } from 'dexie';
+import Dexie from 'dexie';
+import type { Table } from 'dexie';
 import type { Task } from '@/types/task-tracking';
 
 // Corresponds to the DailyLogEntryModel in the frontend
@@ -86,3 +87,5 @@ export class DailyLogEntryORM {
     await db.daily_log_entry.clear();
   }
 }
+
+export default DailyLogEntryORM;

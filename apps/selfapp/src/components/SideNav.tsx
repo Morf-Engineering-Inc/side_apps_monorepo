@@ -85,7 +85,7 @@ export default function SideNav({ active, onChange }: Props) {
   };
 
   return (
-    <nav className="w-64 hidden md:block pr-6">
+    <nav className="hidden md:block pr-6">
       <div className="sticky top-6">
         <div className="mb-6 px-3">
           <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
