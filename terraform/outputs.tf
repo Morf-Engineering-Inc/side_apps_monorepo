@@ -32,3 +32,8 @@ output "cognito_domain" {
   description = "Cognito Hosted UI domain"
   value       = "${aws_cognito_user_pool_domain.main.domain}.auth.${var.aws_region}.amazoncognito.com"
 }
+
+output "dynamodb_entries_table_name" {
+  description = "Name of the DynamoDB table for entries"
+  value       = aws_dynamodb_table.entries.name
+}

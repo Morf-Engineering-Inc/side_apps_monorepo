@@ -225,6 +225,80 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# DynamoDB Table for User Entries
+resource "aws_dynamodb_table" "entries" {
+  name           = "${var.app_name}-entries-${var.environment}"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "userId"
+  range_key      = "entryId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "entryId"
+    type = "S"
+  }
+
+  attribute {
+    name = "createdAt"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserDateIndex"
+    hash_key        = "userId"
+    range_key       = "createdAt"
+    projection_type = "ALL"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = false
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  tags = {
+    Name = "${var.app_name}-entries"
+  }
+}
+
+# IAM Policy for Lambda to access DynamoDB
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "${var.app_name}-lambda-dynamodb"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.entries.arn,
+          "${aws_dynamodb_table.entries.arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # API Handler Lambda Function
 resource "aws_lambda_function" "api_handler" {
   filename         = "${path.module}/../lambda/functions/api-handler.zip"
@@ -240,7 +314,11 @@ resource "aws_lambda_function" "api_handler" {
 
   environment {
     variables = {
-      ENVIRONMENT = var.environment
+      ENVIRONMENT        = var.environment
+      ENTRIES_TABLE_NAME = aws_dynamodb_table.entries.name
+      USER_POOL_ID       = aws_cognito_user_pool.main.id
+      CLIENT_ID          = aws_cognito_user_pool_client.main.id
+      AWS_REGION         = var.aws_region
     }
   }
 

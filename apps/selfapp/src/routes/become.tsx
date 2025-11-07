@@ -7,17 +7,24 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, Check, Heart, Target, TrendingUp } from "lucide-react";
+import { BookOpen, Check, Heart, Target, TrendingUp, Loader2, AlertCircle } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
+import * as apiClient from "@/lib/api-client";
+import type { Entry } from "@/lib/api-client";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/become")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const [entries, setEntries] = useState<any[]>([]);
-	const [currentEntry, setCurrentEntry] = useState<any>({
+	const { isAuthenticated } = useAuth();
+	const [entries, setEntries] = useState<Entry[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [submitting, setSubmitting] = useState(false);
+	const [currentEntry, setCurrentEntry] = useState<Omit<Entry, 'userId' | 'entryId' | 'createdAt' | 'updatedAt'>>({
 		date: new Date().toISOString().split("T")[0],
 		action: "",
 		motive: "",
@@ -25,44 +32,76 @@ function RouteComponent() {
 		hearingHisVoice: false,
 		losingEvilDesires: false,
 		servingOthers: false,
+		serviceBlessedOthers: false,
 		reflection: "",
 	});
 
-	// Load from localStorage
+	// Load entries from API
 	useEffect(() => {
-		const saved = localStorage.getItem("spiritualProgress");
-		if (saved) {
-			setEntries(JSON.parse(saved));
+		if (!isAuthenticated) {
+			setLoading(false);
+			return;
 		}
-	}, []);
 
-	// Save to localStorage
-	useEffect(() => {
-		if (entries.length > 0) {
-			localStorage.setItem("spiritualProgress", JSON.stringify(entries));
-		}
-	}, [entries]);
+		const loadEntries = async () => {
+			try {
+				setLoading(true);
+				setError(null);
+				const fetchedEntries = await apiClient.getEntries(100);
+				setEntries(fetchedEntries);
+			} catch (err) {
+				console.error('Error loading entries:', err);
+				setError(err instanceof Error ? err.message : 'Failed to load entries');
+			} finally {
+				setLoading(false);
+			}
+		};
 
-	const handleSubmit = (e: React.FormEvent) => {
+		loadEntries();
+	}, [isAuthenticated]);
+
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setEntries([...entries, { ...currentEntry, id: Date.now() }]);
-		setCurrentEntry({
-			date: new Date().toISOString().split("T")[0],
-			action: "",
-			motive: "",
-			conscienceCheck: false,
-			hearingHisVoice: false,
-			losingEvilDesires: false,
-			servingOthers: false,
-			reflection: "",
-		});
+		
+		if (!isAuthenticated) {
+			setError('Please sign in to save entries');
+			return;
+		}
+
+		try {
+			setSubmitting(true);
+			setError(null);
+			
+			const newEntry = await apiClient.createEntry(currentEntry);
+			
+			// Add to local state
+			setEntries([newEntry, ...entries]);
+			
+			// Reset form
+			setCurrentEntry({
+				date: new Date().toISOString().split("T")[0],
+				action: "",
+				motive: "",
+				conscienceCheck: false,
+				hearingHisVoice: false,
+				losingEvilDesires: false,
+				servingOthers: false,
+				serviceBlessedOthers: false,
+				reflection: "",
+			});
+		} catch (err) {
+			console.error('Error creating entry:', err);
+			setError(err instanceof Error ? err.message : 'Failed to save entry');
+		} finally {
+			setSubmitting(false);
+		}
 	};
 
 	// Calculate conversion metrics
 	const calculateProgress = () => {
 		if (entries.length === 0) return { becoming: 0, charity: 0, conversion: 0 };
 
-		const recent = entries.slice(-10); // Last 10 entries
+		const recent = entries.slice(0, 10); // Last 10 entries (newest first)
 		const becoming =
 			(recent.filter((e) => e.conscienceCheck).length / recent.length) * 100;
 		const charity =
@@ -81,8 +120,56 @@ function RouteComponent() {
 
 	const progress = calculateProgress();
 
+	// Show loading state
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center min-h-[400px]">
+				<div className="text-center space-y-4">
+					<Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+					<p className="text-gray-600">Loading your progress...</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Show authentication required message
+	if (!isAuthenticated) {
+		return (
+			<div className="flex items-center justify-center min-h-[400px]">
+				<Card className="max-w-md">
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2">
+							<AlertCircle className="w-5 h-5 text-yellow-600" />
+							Authentication Required
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-gray-600">
+							Please sign in to access your spiritual progress tracker.
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
 	return (
 		<div className="space-y-6">
+			{/* Error Alert */}
+			{error && (
+				<Card className="border-red-200 bg-red-50">
+					<CardContent className="pt-6">
+						<div className="flex items-start gap-3">
+							<AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+							<div>
+								<p className="font-medium text-red-900">Error</p>
+								<p className="text-sm text-red-800">{error}</p>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			)}
+
 			{/* Header */}
 			<div className="text-center space-y-2">
 				<h1 className="text-3xl font-bold app-text-strong">
@@ -344,9 +431,17 @@ function RouteComponent() {
 
 						<button
 							type="submit"
-							className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-medium"
+							disabled={submitting}
+							className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 						>
-							Record Progress
+							{submitting ? (
+								<>
+									<Loader2 className="w-4 h-4 animate-spin" />
+									Saving...
+								</>
+							) : (
+								'Record Progress'
+							)}
 						</button>
 					</form>
 				</CardContent>
@@ -381,11 +476,10 @@ function RouteComponent() {
 					<CardContent>
 						<div className="space-y-3">
 							{entries
-								.slice(-5)
-								.reverse()
+								.slice(0, 5)
 								.map((entry) => (
 									<div
-										key={entry.id}
+										key={entry.entryId}
 										className="border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded"
 									>
 										<div className="flex justify-between items-start mb-1">
