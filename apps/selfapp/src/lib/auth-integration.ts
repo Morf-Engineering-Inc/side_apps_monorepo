@@ -507,7 +507,7 @@ async function signUpWithPassword(
 						errorMessage = "An account with this email already exists";
 					} else if (errorCode === "InvalidPasswordException") {
 						errorMessage =
-							"Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
+							"Password does not meet requirements. Please ensure it has sufficient complexity";
 					} else if (errorCode === "InvalidParameterException") {
 						errorMessage = "Invalid email or password format";
 					} else if (errorCode === "TooManyRequestsException") {
@@ -1060,6 +1060,328 @@ async function resendConfirmationCode(
 }
 
 /**
+ * Initiate forgot password flow - sends reset code to user's email
+ */
+async function forgotPassword(
+	username: string,
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const cfg =
+			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+		const userPoolId =
+			cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+		const clientId =
+			cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+		if (!userPoolId || !clientId) {
+			console.error("Cognito not configured");
+			return { success: false, error: "Authentication service not configured" };
+		}
+
+		// Validate and extract region from user pool ID
+		const parts = userPoolId.split("_");
+		if (parts.length !== 2) {
+			console.error("Invalid user pool ID format:", userPoolId);
+			return {
+				success: false,
+				error: "Authentication service configuration error",
+			};
+		}
+		const region = parts[0];
+
+		const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+		const requestBody = {
+			ClientId: clientId,
+			Username: username,
+		};
+
+		console.log("Initiating forgot password flow...");
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-amz-json-1.1",
+					"X-Amz-Target": "AWSCognitoIdentityProviderService.ForgotPassword",
+				},
+				body: JSON.stringify(requestBody),
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("Forgot password failed:", response.status, errorText);
+
+				let errorMessage = "Failed to send reset code. Please try again";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+
+					if (errorCode === "UserNotFoundException") {
+						// For security, don't reveal if user exists
+						errorMessage =
+							"If an account exists, a reset code has been sent to your email";
+					} else if (errorCode === "InvalidParameterException") {
+						errorMessage = "Invalid email address";
+					} else if (
+						errorCode === "LimitExceededException" ||
+						errorCode === "TooManyRequestsException"
+					) {
+						errorMessage =
+							"Too many attempts. Please wait a few minutes before trying again";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+
+				return { success: false, error: errorMessage };
+			}
+
+			console.log("Password reset code sent successfully");
+			return { success: true };
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === "AbortError") {
+				console.error("Forgot password request timed out");
+				return { success: false, error: "Request timed out. Please try again" };
+			}
+			throw error;
+		}
+	} catch (error) {
+		console.error("Error initiating forgot password:", error);
+		return {
+			success: false,
+			error: "An unexpected error occurred. Please try again",
+		};
+	}
+}
+
+/**
+ * Confirm forgot password with verification code and new password
+ */
+async function confirmForgotPassword(
+	username: string,
+	code: string,
+	newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const cfg =
+			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+		const userPoolId =
+			cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+		const clientId =
+			cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+		if (!userPoolId || !clientId) {
+			console.error("Cognito not configured");
+			return { success: false, error: "Authentication service not configured" };
+		}
+
+		// Validate and extract region from user pool ID
+		const parts = userPoolId.split("_");
+		if (parts.length !== 2) {
+			console.error("Invalid user pool ID format:", userPoolId);
+			return {
+				success: false,
+				error: "Authentication service configuration error",
+			};
+		}
+		const region = parts[0];
+
+		const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+		const requestBody = {
+			ClientId: clientId,
+			Username: username,
+			ConfirmationCode: code,
+			Password: newPassword,
+		};
+
+		console.log("Confirming password reset...");
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-amz-json-1.1",
+					"X-Amz-Target":
+						"AWSCognitoIdentityProviderService.ConfirmForgotPassword",
+				},
+				body: JSON.stringify(requestBody),
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("Password reset failed:", response.status, errorText);
+
+				let errorMessage = "Failed to reset password. Please try again";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+
+					if (errorCode === "CodeMismatchException") {
+						errorMessage =
+							"Invalid verification code. Please check and try again";
+					} else if (errorCode === "ExpiredCodeException") {
+						errorMessage =
+							"Verification code has expired. Please request a new one";
+					} else if (errorCode === "InvalidPasswordException") {
+						errorMessage =
+							"Password does not meet requirements. Please ensure it has sufficient complexity";
+					} else if (errorCode === "TooManyRequestsException") {
+						errorMessage = "Too many attempts. Please try again later";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+
+				return { success: false, error: errorMessage };
+			}
+
+			console.log("Password reset successfully");
+			return { success: true };
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === "AbortError") {
+				console.error("Password reset request timed out");
+				return { success: false, error: "Request timed out. Please try again" };
+			}
+			throw error;
+		}
+	} catch (error) {
+		console.error("Error confirming password reset:", error);
+		return {
+			success: false,
+			error: "An unexpected error occurred. Please try again",
+		};
+	}
+}
+
+/**
+ * Change password for authenticated user
+ */
+async function changePassword(
+	oldPassword: string,
+	newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const cfg =
+			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+		const userPoolId =
+			cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+		const clientId =
+			cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+		if (!userPoolId || !clientId) {
+			console.error("Cognito not configured");
+			return { success: false, error: "Authentication service not configured" };
+		}
+
+		// Get the current access token
+		const token = authIntegration.getAuthToken();
+		if (!token) {
+			return { success: false, error: "Not authenticated" };
+		}
+
+		// Validate and extract region from user pool ID
+		const parts = userPoolId.split("_");
+		if (parts.length !== 2) {
+			console.error("Invalid user pool ID format:", userPoolId);
+			return {
+				success: false,
+				error: "Authentication service configuration error",
+			};
+		}
+		const region = parts[0];
+
+		const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+		const requestBody = {
+			PreviousPassword: oldPassword,
+			ProposedPassword: newPassword,
+			AccessToken: token,
+		};
+
+		console.log("Changing password...");
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-amz-json-1.1",
+					"X-Amz-Target": "AWSCognitoIdentityProviderService.ChangePassword",
+				},
+				body: JSON.stringify(requestBody),
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("Change password failed:", response.status, errorText);
+
+				let errorMessage = "Failed to change password. Please try again";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+
+					if (errorCode === "NotAuthorizedException") {
+						errorMessage = "Current password is incorrect";
+					} else if (errorCode === "InvalidPasswordException") {
+						errorMessage =
+							"New password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
+					} else if (errorCode === "LimitExceededException") {
+						errorMessage = "Too many attempts. Please try again later";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+
+				return { success: false, error: errorMessage };
+			}
+
+			console.log("Password changed successfully");
+			return { success: true };
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === "AbortError") {
+				console.error("Change password request timed out");
+				return { success: false, error: "Request timed out. Please try again" };
+			}
+			throw error;
+		}
+	} catch (error) {
+		console.error("Error changing password:", error);
+		return {
+			success: false,
+			error: "An unexpected error occurred. Please try again",
+		};
+	}
+}
+
+/**
  * Authenticate with Cognito using username and password (for custom login form)
  */
 export {
@@ -1067,6 +1389,9 @@ export {
 	signUpWithPassword,
 	confirmSignUp,
 	resendConfirmationCode,
+	forgotPassword,
+	confirmForgotPassword,
+	changePassword,
 };
 
 // Export default for convenience

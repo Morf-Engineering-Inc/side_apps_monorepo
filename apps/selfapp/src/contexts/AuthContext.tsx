@@ -1,6 +1,9 @@
 import {
 	authenticateWithPassword,
+	changePassword,
+	confirmForgotPassword,
 	confirmSignUp,
+	forgotPassword,
 	getAuthTokenAsync,
 	handleCognitoCallback,
 	initializeAuthIntegration,
@@ -47,6 +50,18 @@ interface AuthContextType {
 	) => Promise<{ success: boolean; error?: string }>;
 	resendCode: (
 		username: string,
+	) => Promise<{ success: boolean; error?: string }>;
+	forgotPassword: (
+		username: string,
+	) => Promise<{ success: boolean; error?: string }>;
+	confirmForgotPassword: (
+		username: string,
+		code: string,
+		newPassword: string,
+	) => Promise<{ success: boolean; error?: string }>;
+	changePassword: (
+		oldPassword: string,
+		newPassword: string,
 	) => Promise<{ success: boolean; error?: string }>;
 	logout: () => void;
 	isAuthenticated: boolean;
@@ -250,6 +265,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		return await resendConfirmationCode(username);
 	};
 
+	const handleForgotPassword = async (
+		username: string,
+	): Promise<{ success: boolean; error?: string }> => {
+		if (cognitoEnabled) {
+			return await forgotPassword(username);
+		}
+		// For local mode, simulate success
+		return { success: true };
+	};
+
+	const handleConfirmForgotPassword = async (
+		username: string,
+		code: string,
+		newPassword: string,
+	): Promise<{ success: boolean; error?: string }> => {
+		if (cognitoEnabled) {
+			return await confirmForgotPassword(username, code, newPassword);
+		}
+		// For local development mode only - update the password in localStorage
+		// In production with Cognito, passwords are never stored locally
+		const users = JSON.parse(localStorage.getItem("users") || "[]");
+		const userIndex = users.findIndex(
+			(u: User & { password: string }) => u.email === username,
+		);
+		if (userIndex !== -1) {
+			users[userIndex].password = newPassword;
+			localStorage.setItem("users", JSON.stringify(users));
+			return { success: true };
+		}
+		return { success: false, error: "User not found" };
+	};
+
+	const handleChangePassword = async (
+		oldPassword: string,
+		newPassword: string,
+	): Promise<{ success: boolean; error?: string }> => {
+		if (cognitoEnabled) {
+			return await changePassword(oldPassword, newPassword);
+		}
+		// For local development mode only - verify old password and update
+		// In production with Cognito, passwords are never stored locally
+		if (!user) {
+			return { success: false, error: "Not authenticated" };
+		}
+		const users = JSON.parse(localStorage.getItem("users") || "[]");
+		const userIndex = users.findIndex(
+			(u: User & { password: string }) => u.email === user.email,
+		);
+		if (userIndex !== -1) {
+			if (users[userIndex].password !== oldPassword) {
+				return { success: false, error: "Current password is incorrect" };
+			}
+			users[userIndex].password = newPassword;
+			localStorage.setItem("users", JSON.stringify(users));
+			return { success: true };
+		}
+		return { success: false, error: "User not found" };
+	};
+
 	const logout = () => {
 		setUser(null);
 		localStorage.removeItem("user");
@@ -285,6 +359,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				signup,
 				confirmSignup,
 				resendCode,
+				forgotPassword: handleForgotPassword,
+				confirmForgotPassword: handleConfirmForgotPassword,
+				changePassword: handleChangePassword,
 				logout,
 				isAuthenticated: !!user,
 			}}

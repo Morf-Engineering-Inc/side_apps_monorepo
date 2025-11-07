@@ -277,6 +277,13 @@ function LoginPage() {
 									<Button type="submit" className="w-full" disabled={loading}>
 										{loading ? "Logging in..." : "Login"}
 									</Button>
+									<button
+										type="button"
+										onClick={() => navigate({ to: "/forgot-password" })}
+										className="w-full text-sm app-text-muted hover:underline mt-2"
+									>
+										Forgot Password?
+									</button>
 								</form>
 							</CardContent>
 						</Card>

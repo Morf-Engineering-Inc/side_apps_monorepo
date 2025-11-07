@@ -6,10 +6,19 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Calendar, Key, Mail, Shield, User as UserIcon } from "lucide-react";
+import {
+	Calendar,
+	Key,
+	Lock,
+	Mail,
+	Shield,
+	User as UserIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/profile")({
@@ -31,9 +40,16 @@ interface TokenInfo {
 }
 
 function ProfilePage() {
-	const { user, logout } = useAuth();
+	const { user, logout, changePassword } = useAuth();
 	const navigate = useNavigate();
 	const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+	const [showChangePassword, setShowChangePassword] = useState(false);
+	const [oldPassword, setOldPassword] = useState("");
+	const [newPassword, setNewPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [passwordError, setPasswordError] = useState("");
+	const [passwordSuccess, setPasswordSuccess] = useState("");
+	const [passwordLoading, setPasswordLoading] = useState(false);
 
 	useEffect(() => {
 		// Try to get token info from localStorage
@@ -62,6 +78,39 @@ function ProfilePage() {
 	const isTokenExpired = (exp?: number) => {
 		if (!exp) return false;
 		return Date.now() / 1000 > exp;
+	};
+
+	const handleChangePassword = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setPasswordError("");
+		setPasswordSuccess("");
+
+		if (newPassword.length < 8) {
+			setPasswordError("Password must be at least 8 characters");
+			return;
+		}
+
+		if (newPassword !== confirmPassword) {
+			setPasswordError("Passwords do not match");
+			return;
+		}
+
+		setPasswordLoading(true);
+
+		const result = await changePassword(oldPassword, newPassword);
+		if (result.success) {
+			setPasswordSuccess("Password changed successfully!");
+			setOldPassword("");
+			setNewPassword("");
+			setConfirmPassword("");
+			setTimeout(() => {
+				setShowChangePassword(false);
+				setPasswordSuccess("");
+			}, 2000);
+		} else {
+			setPasswordError(result.error || "Failed to change password");
+		}
+		setPasswordLoading(false);
 	};
 
 	return (
@@ -207,6 +256,96 @@ function ProfilePage() {
 					</CardContent>
 				</Card>
 			)}
+
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<Lock className="h-5 w-5" />
+						Change Password
+					</CardTitle>
+					<CardDescription>Update your account password</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{!showChangePassword ? (
+						<Button
+							onClick={() => setShowChangePassword(true)}
+							className="w-full md:w-auto"
+						>
+							Change Password
+						</Button>
+					) : (
+						<form onSubmit={handleChangePassword} className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="old-password">Current Password</Label>
+								<Input
+									id="old-password"
+									type="password"
+									placeholder="••••••••"
+									value={oldPassword}
+									onChange={(e) => setOldPassword(e.target.value)}
+									required
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="new-password">New Password</Label>
+								<Input
+									id="new-password"
+									type="password"
+									placeholder="••••••••"
+									value={newPassword}
+									onChange={(e) => setNewPassword(e.target.value)}
+									required
+								/>
+								<p className="text-xs app-text-muted">
+									At least 8 characters (additional complexity requirements may apply)
+								</p>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="confirm-new-password">
+									Confirm New Password
+								</Label>
+								<Input
+									id="confirm-new-password"
+									type="password"
+									placeholder="••••••••"
+									value={confirmPassword}
+									onChange={(e) => setConfirmPassword(e.target.value)}
+									required
+								/>
+							</div>
+							{passwordError && (
+								<p className="text-sm text-red-600 dark:text-red-400">
+									{passwordError}
+								</p>
+							)}
+							{passwordSuccess && (
+								<p className="text-sm text-green-600 dark:text-green-400">
+									{passwordSuccess}
+								</p>
+							)}
+							<div className="flex gap-2">
+								<Button type="submit" disabled={passwordLoading}>
+									{passwordLoading ? "Changing..." : "Update Password"}
+								</Button>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => {
+										setShowChangePassword(false);
+										setOldPassword("");
+										setNewPassword("");
+										setConfirmPassword("");
+										setPasswordError("");
+										setPasswordSuccess("");
+									}}
+								>
+									Cancel
+								</Button>
+							</div>
+						</form>
+					)}
+				</CardContent>
+			</Card>
 
 			<div className="flex justify-center pt-6 pb-4 border-t app-border-default mt-8">
 				<button
