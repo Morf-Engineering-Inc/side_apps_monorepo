@@ -68,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 									payload["cognito:username"] ||
 									"",
 							};
-							console.log("Setting authenticated user:", newUser);
 							setUser(newUser);
 							localStorage.setItem("user", JSON.stringify(newUser));
 						}
