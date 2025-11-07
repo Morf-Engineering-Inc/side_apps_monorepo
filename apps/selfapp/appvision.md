@@ -1,3 +1,10 @@
+The Core Truth:
+Your heart has a direction in every moment → that direction shapes your becoming
+The Operating Principle:
+WHY > WHAT (the motivation behind an action determines its transformative power)
+The App's Job:
+Help users identify and align with the right WHY - not just any motivation, but one that points them toward who they truly want to become
+
 The use of this app is to help a person NOTICE and REALIGN the direction of their love in real time — so their end result is who they BECAME, not just what they achieved.
 you are building a love compass calibration tool.you just quoted Alma 38:12
 Bridle passion self mastery submission to Gods will . Orient towards love.

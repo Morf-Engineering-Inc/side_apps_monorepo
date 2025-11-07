@@ -89,25 +89,15 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold app-text-strong mb-2">
+          <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-2">
             Performance Tracker
           </h1>
-          <p className="app-text-subtle">
+          <p className="text-zinc-700 dark:text-zinc-300">
             Track your progress, achieve your goals
           </p>
-          {cognitoConfigured && (
-            <p className="text-sm app-text-muted mt-2">
-              Using Cognito authentication
-            </p>
-          )}
-          {!cognitoConfigured && (
-            <p className="text-sm app-text-muted mt-2">
-              Using local authentication mode
-            </p>
-          )}
         </div>{' '}
         <Tabs defaultValue="login">
           <TabsList className="grid w-full grid-cols-2 mb-4">
