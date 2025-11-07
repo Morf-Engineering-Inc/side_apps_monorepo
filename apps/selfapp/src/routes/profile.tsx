@@ -192,16 +192,7 @@ function ProfilePage() {
 								</div>
 							</div>
 
-							{tokenInfo.iss && (
-								<div className="md:col-span-2">
-									<p className="text-sm font-medium app-text-subtle mb-1">
-										Issuer
-									</p>
-									<p className="text-sm font-mono app-text-subtle break-all">
-										{tokenInfo.iss}
-									</p>
-								</div>
-							)}
+
 						</div>
 					</CardContent>
 				</Card>

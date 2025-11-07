@@ -4,6 +4,7 @@
  */
 
 import { getAuthToken } from "./auth-integration";
+import { TokenExpiredError } from "./auth-errors";
 
 // Get API URL from config or environment
 const getApiUrl = (): string => {
@@ -108,7 +109,7 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Make authenticated API request
+ * Make authenticated API request with enhanced error handling
  */
 async function apiRequest<T>(
 	endpoint: string,
@@ -139,6 +140,11 @@ async function apiRequest<T>(
 	});
 
 	if (!response.ok) {
+		// Handle 401 Unauthorized specifically (expired or invalid token)
+		if (response.status === 401) {
+			throw new TokenExpiredError();
+		}
+		
 		const errorData = await response.json().catch(() => ({}));
 		throw new Error(
 			errorData.message || errorData.error || `HTTP ${response.status}`,

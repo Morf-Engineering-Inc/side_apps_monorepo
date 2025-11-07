@@ -35,6 +35,7 @@ import {
 	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/success")({
 	component: RouteComponent,
@@ -89,7 +90,13 @@ function RouteComponent() {
 				}
 			} catch (error) {
 				console.error("Failed to load success definition:", error);
-				setSaveMessage("Failed to load data. Please refresh.");
+				const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to load entries: ${errorMessage}`);
+				}
 			} finally {
 				setLoading(false);
 			}
@@ -183,8 +190,14 @@ function RouteComponent() {
 			setTimeout(() => setSaveMessage(""), 3000);
 		} catch (error) {
 			console.error("Failed to save success definition:", error);
-			setSaveMessage("Failed to save. Please try again.");
-			setTimeout(() => setSaveMessage(""), 3000);
+			const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to save: ${errorMessage}`);
+				}
+			setTimeout(() => setSaveMessage(""), 5000);
 		} finally {
 			setSubmitting(false);
 		}

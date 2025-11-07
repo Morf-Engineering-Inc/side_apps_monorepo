@@ -40,6 +40,7 @@ import {
 	User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/")({
 	component: Index,
@@ -197,8 +198,15 @@ function DailyLogForm() {
 
 			setTimeout(() => setSaveMessage(""), 3000);
 		} catch (error) {
-			setSaveMessage("Error saving entry. Please try again.");
 			console.error("Error saving log entry:", error);
+			const authError = getAuthErrorMessage(error);
+			if (authError) {
+				setSaveMessage(authError);
+			} else {
+				const errorMessage = error instanceof Error ? error.message : "Unknown error";
+				setSaveMessage(`Error saving entry: ${errorMessage}`);
+			}
+			setTimeout(() => setSaveMessage(""), 5000);
 		} finally {
 			setLoading(false);
 		}

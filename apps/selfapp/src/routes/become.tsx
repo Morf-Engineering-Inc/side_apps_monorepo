@@ -20,6 +20,7 @@ import {
 	TrendingUp,
 } from "lucide-react";
 import type React from "react";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/become")({
@@ -61,7 +62,13 @@ function RouteComponent() {
 				setEntries(fetchedEntries);
 			} catch (err) {
 				console.error("Error loading entries:", err);
-				setError(err instanceof Error ? err.message : "Failed to load entries");
+				const authError = getAuthErrorMessage(err);
+				if (authError) {
+					setError(authError);
+				} else {
+					const errorMessage = err instanceof Error ? err.message : "Failed to load entries";
+					setError(errorMessage);
+				}
 			} finally {
 				setLoading(false);
 			}
@@ -101,7 +108,13 @@ function RouteComponent() {
 			});
 		} catch (err) {
 			console.error("Error creating entry:", err);
-			setError(err instanceof Error ? err.message : "Failed to save entry");
+			const authError = getAuthErrorMessage(err);
+			if (authError) {
+				setError(authError);
+			} else {
+				const errorMessage = err instanceof Error ? err.message : "Failed to save entry";
+				setError(errorMessage);
+			}
 		} finally {
 			setSubmitting(false);
 		}

@@ -16,6 +16,7 @@ import {
 	deleteLetGodEntry,
 	listLetGodEntries,
 } from "@/lib/api-client-entities";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -66,7 +67,13 @@ function RouteComponent() {
 				setEntries(sorted);
 			} catch (error) {
 				console.error("Failed to load Let God Prevail entries:", error);
-				setSaveMessage("Failed to load entries. Please refresh.");
+				const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to load entries: ${errorMessage}`);
+				}
 			} finally {
 				setLoading(false);
 			}
@@ -113,8 +120,14 @@ function RouteComponent() {
 			resetForm();
 		} catch (error) {
 			console.error("Failed to save entry:", error);
-			setSaveMessage("Failed to save. Please try again.");
-			setTimeout(() => setSaveMessage(""), 3000);
+			const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to save: ${errorMessage}`);
+				}
+			setTimeout(() => setSaveMessage(""), 5000);
 		} finally {
 			setSubmitting(false);
 		}
@@ -131,8 +144,14 @@ function RouteComponent() {
 			setTimeout(() => setSaveMessage(""), 2000);
 		} catch (error) {
 			console.error("Failed to delete entry:", error);
-			setSaveMessage("Failed to delete. Please try again.");
-			setTimeout(() => setSaveMessage(""), 3000);
+			const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to delete: ${errorMessage}`);
+				}
+			setTimeout(() => setSaveMessage(""), 5000);
 		}
 	};
 
