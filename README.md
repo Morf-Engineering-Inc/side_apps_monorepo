@@ -249,6 +249,18 @@ pip install -r requirements.txt
 - `.gitignore`: Files to ignore in git
 - `tsconfig.json`: TypeScript configuration (per-project)
 
+## 📚 Documentation
+
+Comprehensive guides available in the [`docs/`](./docs) directory:
+
+- **[Certificate Verification](./docs/CERTIFICATE_VERIFICATION.md)** - Guide for validating ACM certificates
+- **[Namecheap DNS Setup](./docs/NAMECHEAP_DNS_SETUP.md)** - Quick DNS configuration reference
+- **[Custom Domain Setup](./docs/CUSTOM_DOMAIN_SETUP.md)** - Complete domain configuration guide
+- **[Cognito Setup](./docs/COGNITO_SETUP.md)** - Authentication configuration
+- **[Terraform Infrastructure](./terraform/README.md)** - Infrastructure deployment guide
+
+See the [Documentation Index](./docs/README.md) for a complete list.
+
 ## 📄 License
 
 MIT

@@ -300,6 +300,8 @@ See `.github/workflows/deploy-become.yml` for details.
 
 ## Documentation
 
+- [Certificate Verification Guide](../docs/CERTIFICATE_VERIFICATION.md) - Step-by-step guide for validating ACM certificates
+- [Namecheap DNS Setup](../docs/NAMECHEAP_DNS_SETUP.md) - Quick reference for DNS configuration
 - [Custom Domain Setup Guide](../docs/CUSTOM_DOMAIN_SETUP.md) - How to configure trueorient.life with SSL
 - [Cognito Setup Guide](../docs/COGNITO_SETUP.md) - Authentication configuration
 - [Deployment Fixes](../docs/DEPLOYMENT_FIXES.md) - Recent infrastructure fixes

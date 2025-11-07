@@ -2,6 +2,8 @@
 
 This guide explains how to set up the custom domain `trueorient.life` with SSL for the BecomeLog application.
 
+> **Quick Start**: If you have a certificate pending validation, see the [Certificate Verification Guide](./CERTIFICATE_VERIFICATION.md) or [Namecheap DNS Setup Guide](./NAMECHEAP_DNS_SETUP.md) for step-by-step instructions.
+
 ## Overview
 
 The infrastructure now includes:
@@ -14,6 +16,11 @@ The infrastructure now includes:
 1. Domain `trueorient.life` registered on Namecheap
 2. Access to Namecheap DNS management
 3. AWS infrastructure deployed via Terraform
+
+## Related Guides
+
+- **[Certificate Verification Guide](./CERTIFICATE_VERIFICATION.md)** - Detailed guide for verifying ACM certificates
+- **[Namecheap DNS Setup](./NAMECHEAP_DNS_SETUP.md)** - Quick reference for adding DNS records to Namecheap
 
 ## Deployment Steps
 
