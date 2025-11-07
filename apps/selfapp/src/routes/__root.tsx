@@ -14,7 +14,7 @@ export const Route = createRootRoute({
 });
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ["/welcome", "/login"];
+const PUBLIC_ROUTES = ["/welcome", "/login", "/callback"];
 
 function Root() {
 	const { isAuthenticated } = useAuth();

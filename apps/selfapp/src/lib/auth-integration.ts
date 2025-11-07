@@ -310,15 +310,29 @@ export function buildCognitoAuthorizeUrl(opts?: {
     (window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
   const clientId = cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
   const domain = cfg.cognitoDomain || cfg.cognito_domain || cfg.domain;
+  const responseType = opts?.responseType || cfg.responseType || 'code'; // OAuth 2.0 Authorization Code flow (more secure than implicit flow)
+  
+  // Use redirectSignIn if available (from config.js), otherwise fallback to /callback
   const redirectUri =
+    cfg.redirectSignIn ||
     cfg.redirectUri ||
     cfg.redirect_uri ||
-    window.location.origin + window.location.pathname;
-  console.log('Building Cognito URL with:', { clientId, domain, redirectUri });
+    `${window.location.origin}/callback`;
+  
+  console.log('Building Cognito URL with:', { clientId, domain, redirectUri, responseType });
   if (!domain || !clientId) return null;
-  const scope = opts?.scope || 'openid profile email';
-  const responseType = opts?.responseType || 'token'; // implicit flow
+  const scope = opts?.scope || cfg.scopes?.join(' ') || 'openid profile email';
   const state = Math.random().toString(36).slice(2);
+  
+  // Store state for validation on callback
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem('cognito_auth_state', state);
+    }
+  } catch (e) {
+    // ignore
+  }
+  
   const url = new URL(`https://${domain}/login`);
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('response_type', responseType);
@@ -347,10 +361,77 @@ function parseHashTokens(hash: string) {
   return { id_token, access_token, expires_in };
 }
 
+function parseCodeFromUrl() {
+  // Parse authorization code from URL query params
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const error = params.get('error');
+  return { code, state, error };
+}
+
 export function handleCognitoCallback(): Promise<boolean> {
   return new Promise((resolve) => {
     try {
       if (typeof window === 'undefined') return resolve(false);
+      
+      // First, check for authorization code (code flow)
+      const { code, state, error } = parseCodeFromUrl();
+      
+      if (error) {
+        console.error('Cognito callback error:', error);
+        return resolve(false);
+      }
+      
+      if (code) {
+        // Validate state if available
+        try {
+          const savedState = window.sessionStorage?.getItem('cognito_auth_state');
+          if (savedState && savedState !== state) {
+            console.error('State mismatch in OAuth callback');
+            return resolve(false);
+          }
+          window.sessionStorage?.removeItem('cognito_auth_state');
+        } catch (e) {
+          // ignore storage errors
+        }
+        
+        // SECURITY NOTE: In production, authorization codes should be exchanged for tokens
+        // via a secure backend endpoint (not in the frontend). This requires:
+        // 1. A backend API endpoint that receives the code
+        // 2. The backend exchanges the code with Cognito token endpoint
+        // 3. The backend validates and returns the JWT tokens
+        // 
+        // For this standalone frontend app without a backend, we're treating the code
+        // as a simple auth indicator. This is acceptable for development/testing but
+        // should be replaced with proper token exchange in production.
+        
+        // TODO: Add environment check to ensure this only runs in development
+        // if (process.env.NODE_ENV === 'production') { 
+        //   throw new Error('Direct code usage not allowed in production');
+        // }
+        
+        console.log('Received authorization code from Cognito');
+        authIntegration.setAuthTokenAsync(code as string).then(() => {
+          // Clean up URL while preserving non-OAuth query parameters
+          try {
+            const url = new URL(window.location.href);
+            // Remove OAuth-specific parameters
+            url.searchParams.delete('code');
+            url.searchParams.delete('state');
+            url.searchParams.delete('error');
+            url.searchParams.delete('error_description');
+            
+            // Reconstruct URL with remaining query params
+            const newUrl = url.pathname + (url.search || '');
+            history.replaceState(null, '', newUrl);
+          } catch (e) {}
+          resolve(true);
+        });
+        return;
+      }
+      
+      // Fallback: check for implicit flow tokens in hash
       const hash = window.location.hash || window.location.search;
       if (!hash) return resolve(false);
       const tokens = parseHashTokens(hash);

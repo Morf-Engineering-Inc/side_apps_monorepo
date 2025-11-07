@@ -167,7 +167,9 @@ resource "aws_cognito_user_pool_client" "main" {
   # Callback URLs - will be updated after CloudFront is created
   callback_urls = [
     "https://${aws_cloudfront_distribution.frontend.domain_name}/",
-    "http://localhost:3003/"
+    "https://${aws_cloudfront_distribution.frontend.domain_name}/callback",
+    "http://localhost:3003/",
+    "http://localhost:3003/callback"
   ]
 
   logout_urls = [
