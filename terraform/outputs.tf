@@ -37,3 +37,43 @@ output "dynamodb_entries_table_name" {
   description = "Name of the DynamoDB table for entries"
   value       = aws_dynamodb_table.entries.name
 }
+
+output "certificate_arn" {
+  description = "ARN of the ACM certificate"
+  value       = aws_acm_certificate.domain.arn
+}
+
+output "acm_validation_records" {
+  description = "DNS records to add to Namecheap for certificate validation"
+  value = [
+    for dvo in aws_acm_certificate.domain.domain_validation_options : {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  ]
+}
+
+output "nameserver_instructions" {
+  description = "Instructions for Namecheap DNS setup"
+  value = <<-EOT
+    
+    🌐 DNS SETUP REQUIRED:
+    
+    1. Add ACM Validation Record to Namecheap:
+       ${join("\n       ", [for record in aws_acm_certificate.domain.domain_validation_options :
+"CNAME: ${record.resource_record_name} -> ${record.resource_record_value}"])}
+    
+    2. Add CloudFront CNAME Records to Namecheap:
+       CNAME: @ -> ${aws_cloudfront_distribution.frontend.domain_name}
+       CNAME: www -> ${aws_cloudfront_distribution.frontend.domain_name}
+    
+    3. Wait 5-10 minutes for DNS propagation
+    
+  EOT
+}
+
+output "custom_domain_url" {
+  description = "Custom domain URL"
+  value       = "https://${var.domain_name}"
+}

@@ -17,6 +17,9 @@ env:
   APP_NAME: become-log
   APP_TAG_KEY: awsApplication
   APP_TAG_VALUE: arn:aws:resource-groups:${{ secrets.AWS_REGION || 'us-east-1' }}:${{ secrets.AWS_ACCOUNT_ID }}:group/become-log
+  # Custom domain configuration
+  DOMAIN_NAME: trueorient.life
+  TF_VAR_domain_name: trueorient.life
 
 jobs:
   build-and-deploy:
@@ -166,6 +169,7 @@ jobs:
         env:
           TF_VAR_app_name: ${{ env.APP_NAME }}
           TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
+          TF_VAR_aws_application_tag_key: ${{ env.APP_TAG_KEY }}
 
       - name: Terraform Plan
         id: plan
@@ -174,6 +178,7 @@ jobs:
         env:
           TF_VAR_app_name: ${{ env.APP_NAME }}
           TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
+          TF_VAR_aws_application_tag_key: ${{ env.APP_TAG_KEY }}
 
       - name: Terraform Apply
         if: ${{ success() }}
@@ -182,6 +187,7 @@ jobs:
         env:
           TF_VAR_app_name: ${{ env.APP_NAME }}
           TF_VAR_aws_application_tag: ${{ env.APP_ARN }}
+          TF_VAR_aws_application_tag_key: ${{ env.APP_TAG_KEY }}
 
       - name: Get Terraform Outputs
         id: tf_outputs
@@ -193,6 +199,22 @@ jobs:
           echo "cognito_user_pool_id=$(terraform output -raw cognito_user_pool_id)" >> $GITHUB_OUTPUT
           echo "cognito_client_id=$(terraform output -raw cognito_client_id)" >> $GITHUB_OUTPUT
           echo "cognito_domain=$(terraform output -raw cognito_domain)" >> $GITHUB_OUTPUT
+          echo "custom_domain_url=$(terraform output -raw custom_domain_url)" >> $GITHUB_OUTPUT
+        working-directory: ./terraform
+
+      - name: Display DNS Setup Instructions
+        run: |
+          echo "## 🌐 DNS Setup Instructions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To enable the custom domain (trueorient.life), add these DNS records in Namecheap:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ACM Certificate Validation" >> $GITHUB_STEP_SUMMARY
+          terraform output -raw nameserver_instructions >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Important Notes" >> $GITHUB_STEP_SUMMARY
+          echo "- Certificate validation may take 5-30 minutes after adding DNS records" >> $GITHUB_STEP_SUMMARY
+          echo "- The CloudFront distribution will not serve traffic on the custom domain until the certificate is validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Check certificate status: \`aws acm describe-certificate --certificate-arn <arn> --region us-east-1\`" >> $GITHUB_STEP_SUMMARY
         working-directory: ./terraform
 
       - name: Associate Terraform-created resources with AppRegistry
@@ -404,6 +426,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📍 URLs" >> $GITHUB_STEP_SUMMARY
           echo "- **Frontend**: ${{ steps.tf_outputs.outputs.cloudfront_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Custom Domain**: ${{ steps.tf_outputs.outputs.custom_domain_url }} (after DNS setup)" >> $GITHUB_STEP_SUMMARY
           echo "- **API Gateway**: ${{ steps.tf_outputs.outputs.api_url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔐 Cognito Details" >> $GITHUB_STEP_SUMMARY
@@ -413,5 +436,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Visit the CloudFront URL to access BecomeLog" >> $GITHUB_STEP_SUMMARY
-          echo "2. Sign up using Cognito authentication" >> $GITHUB_STEP_SUMMARY
-          echo "3. View all app resources in AWS Console > myApplications" >> $GITHUB_STEP_SUMMARY
+          echo "2. Add DNS records to Namecheap (see DNS Setup Instructions above)" >> $GITHUB_STEP_SUMMARY
+          echo "3. Wait for certificate validation (5-30 minutes)" >> $GITHUB_STEP_SUMMARY
+          echo "4. Access BecomeLog at https://trueorient.life" >> $GITHUB_STEP_SUMMARY
+          echo "5. Sign up using Cognito authentication" >> $GITHUB_STEP_SUMMARY
+          echo "6. View all app resources in AWS Console > myApplications" >> $GITHUB_STEP_SUMMARY

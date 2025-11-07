@@ -65,6 +65,11 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
+  aliases = [
+    var.domain_name,
+    "www.${var.domain_name}"
+  ]
+
   origin {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.frontend.id}"
@@ -100,7 +105,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate.domain.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   custom_error_response {
@@ -171,12 +178,18 @@ resource "aws_cognito_user_pool_client" "main" {
   callback_urls = [
     "https://${aws_cloudfront_distribution.frontend.domain_name}/",
     "https://${aws_cloudfront_distribution.frontend.domain_name}/callback",
+    "https://${var.domain_name}/",
+    "https://${var.domain_name}/callback",
+    "https://www.${var.domain_name}/",
+    "https://www.${var.domain_name}/callback",
     "http://localhost:3003/",
     "http://localhost:3003/callback"
   ]
 
   logout_urls = [
     "https://${aws_cloudfront_distribution.frontend.domain_name}/",
+    "https://${var.domain_name}/",
+    "https://www.${var.domain_name}/",
     "http://localhost:3003/"
   ]
 
@@ -227,10 +240,10 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 
 # DynamoDB Table for User Entries
 resource "aws_dynamodb_table" "entries" {
-  name           = "${var.app_name}-entries-${var.environment}"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "userId"
-  range_key      = "entryId"
+  name         = "${var.app_name}-entries-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "userId"
+  range_key    = "entryId"
 
   attribute {
     name = "userId"
@@ -356,9 +369,11 @@ resource "aws_apigatewayv2_api" "main" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    # Allow CloudFront domain and localhost for development
+    # Allow CloudFront domain, custom domain, and localhost for development
     allow_origins = [
       "https://${aws_cloudfront_distribution.frontend.domain_name}",
+      "https://${var.domain_name}",
+      "https://www.${var.domain_name}",
       "http://localhost:3003"
     ]
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
