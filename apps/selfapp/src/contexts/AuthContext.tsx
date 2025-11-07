@@ -90,6 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				await setAuthTokenAsync(token as string);
 
 				// Decode token and set user
+				// Security Note: User profile data (id, email, name) is stored in localStorage
+				// for session persistence. The actual JWT tokens are stored separately.
+				// For higher security requirements, consider using httpOnly cookies with a backend.
 				try {
 					const payload = decodeJWT(token as string);
 					if (payload) {
