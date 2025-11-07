@@ -59,17 +59,31 @@ resource "aws_s3_bucket_policy" "frontend" {
   })
 }
 
+# ACM Certificate for Custom Domain
+resource "aws_acm_certificate" "domain" {
+  domain_name               = var.domain_name
+  subject_alternative_names = ["www.${var.domain_name}"]
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "${var.app_name}-certificate"
+  }
+}
+
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
-  # Remove aliases for test environment - will use CloudFront default domain
-  # aliases = [
-  #   var.domain_name,
-  #   "www.${var.domain_name}"
-  # ]
+  aliases = [
+    var.domain_name,
+    "www.${var.domain_name}"
+  ]
 
   origin {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
@@ -105,9 +119,10 @@ resource "aws_cloudfront_distribution" "frontend" {
     }
   }
 
-  # Use default CloudFront certificate for test environment
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate.domain.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   custom_error_response {
