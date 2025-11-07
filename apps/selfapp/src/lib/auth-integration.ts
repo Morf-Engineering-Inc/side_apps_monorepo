@@ -507,7 +507,7 @@ async function signUpWithPassword(
 						errorMessage = "An account with this email already exists";
 					} else if (errorCode === "InvalidPasswordException") {
 						errorMessage =
-							"Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
+							"Password does not meet requirements. Please ensure it has sufficient complexity";
 					} else if (errorCode === "InvalidParameterException") {
 						errorMessage = "Invalid email or password format";
 					} else if (errorCode === "TooManyRequestsException") {
@@ -1241,7 +1241,7 @@ async function confirmForgotPassword(
 							"Verification code has expired. Please request a new one";
 					} else if (errorCode === "InvalidPasswordException") {
 						errorMessage =
-							"Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
+							"Password does not meet requirements. Please ensure it has sufficient complexity";
 					} else if (errorCode === "TooManyRequestsException") {
 						errorMessage = "Too many attempts. Please try again later";
 					} else if (errorData.message) {

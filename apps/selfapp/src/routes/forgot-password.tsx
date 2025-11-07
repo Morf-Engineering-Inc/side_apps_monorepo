@@ -168,8 +168,7 @@ function ForgotPasswordPage() {
 										required
 									/>
 									<p className="text-xs app-text-muted">
-										Must be at least 8 characters with uppercase, lowercase,
-										numbers, and symbols
+										At least 8 characters (additional complexity requirements may apply)
 									</p>
 								</div>
 								<div className="space-y-2">
