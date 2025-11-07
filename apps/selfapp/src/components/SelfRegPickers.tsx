@@ -62,6 +62,12 @@ export function EmotionTermPicker({
 	);
 
 	if (!family) {
+		// This is expected behavior when no emotion family is selected yet
+		if (emotionFamily) {
+			console.warn(
+				`EmotionTermPicker: Unknown emotion family "${emotionFamily}"`,
+			);
+		}
 		return null;
 	}
 

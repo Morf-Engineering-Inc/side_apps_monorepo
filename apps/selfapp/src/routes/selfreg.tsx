@@ -113,8 +113,8 @@ function RouteComponent() {
 		try {
 			const entry = await createSelfRegEntry({
 				trigger: trigger.trim(),
-				emotionFamily: emotionFamily.trim() || null,
-				emotionTerm: emotionTerm.trim() || null,
+				emotionFamily: emotionFamily ? emotionFamily.trim() || null : null,
+				emotionTerm: emotionTerm ? emotionTerm.trim() || null : null,
 				distraction: distraction.trim() || null,
 				choice: choice.trim(),
 				identity,
