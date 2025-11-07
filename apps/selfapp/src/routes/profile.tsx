@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { decodeJWT } from "@/lib/jwt-utils";
-import { createFileRoute } from "@tanstack/react-router";
-import { Calendar, Key, Mail, User as UserIcon } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Calendar, Key, Mail, Shield, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/profile")({
@@ -32,6 +32,7 @@ interface TokenInfo {
 
 function ProfilePage() {
 	const { user, logout } = useAuth();
+	const navigate = useNavigate();
 	const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
 
 	useEffect(() => {
@@ -217,6 +218,16 @@ function ProfilePage() {
 					</CardContent>
 				</Card>
 			)}
+
+			<div className="flex justify-center pt-6 pb-4 border-t app-border-default mt-8">
+				<button
+					onClick={() => navigate({ to: "/privacy" })}
+					className="text-sm app-text-muted hover:app-text-strong transition-colors flex items-center gap-2"
+				>
+					<Shield className="h-4 w-4" />
+					Privacy Policy
+				</button>
+			</div>
 		</div>
 	);
 }

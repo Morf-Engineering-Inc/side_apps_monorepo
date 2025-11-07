@@ -13,6 +13,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as SelfregRouteImport } from './routes/selfreg'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LetgodRouteImport } from './routes/letgod'
 import { Route as JwtDebugRouteImport } from './routes/jwt-debug'
@@ -38,6 +39,11 @@ const SelfregRoute = SelfregRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/selfreg': typeof SelfregRoute
   '/success': typeof SuccessRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/selfreg': typeof SelfregRoute
   '/success': typeof SuccessRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/selfreg': typeof SelfregRoute
   '/success': typeof SuccessRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/jwt-debug'
     | '/letgod'
     | '/login'
+    | '/privacy'
     | '/profile'
     | '/selfreg'
     | '/success'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/jwt-debug'
     | '/letgod'
     | '/login'
+    | '/privacy'
     | '/profile'
     | '/selfreg'
     | '/success'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/jwt-debug'
     | '/letgod'
     | '/login'
+    | '/privacy'
     | '/profile'
     | '/selfreg'
     | '/success'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   JwtDebugRoute: typeof JwtDebugRoute
   LetgodRoute: typeof LetgodRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SelfregRoute: typeof SelfregRoute
   SuccessRoute: typeof SuccessRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   JwtDebugRoute: JwtDebugRoute,
   LetgodRoute: LetgodRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SelfregRoute: SelfregRoute,
   SuccessRoute: SuccessRoute,

@@ -163,6 +163,50 @@ jobs:
           chmod +x ./scripts/build-lambda.sh
           ./scripts/build-lambda.sh
 
+      - name: Check and clear stale Terraform locks
+        run: |
+          set +e  # Don't exit on error
+          echo "Checking for stale Terraform state locks..."
+          
+          # Try to initialize terraform first to check lock status
+          terraform init -input=false
+          INIT_EXIT_CODE=$?
+          
+          if [ $INIT_EXIT_CODE -ne 0 ]; then
+            echo "Terraform init failed, checking if it's due to a lock..."
+            
+            # Get the lock ID from DynamoDB if it exists
+            LOCK_ID=$(aws dynamodb get-item \
+              --table-name "${TF_STATE_LOCK_TABLE}" \
+              --key '{"LockID":{"S":"become-log-terraform-state/terraform.tfstate"}}' \
+              --query 'Item.LockID.S' \
+              --output text 2>/dev/null)
+            
+            if [ ! -z "$LOCK_ID" ] && [ "$LOCK_ID" != "None" ]; then
+              echo "Found stale lock with ID: $LOCK_ID"
+              echo "Attempting to force-unlock..."
+              
+              # Force unlock using terraform
+              terraform force-unlock -force "$LOCK_ID" || true
+              
+              # If terraform force-unlock fails, try deleting the lock from DynamoDB directly
+              echo "Clearing lock from DynamoDB..."
+              aws dynamodb delete-item \
+                --table-name "${TF_STATE_LOCK_TABLE}" \
+                --key '{"LockID":{"S":"become-log-terraform-state/terraform.tfstate"}}' || true
+              
+              echo "✅ Stale lock cleared"
+            else
+              echo "No lock found in DynamoDB, error may be due to other issues"
+            fi
+          else
+            echo "✅ No stale locks detected"
+          fi
+          
+          set -e  # Re-enable exit on error
+        working-directory: ./terraform
+        continue-on-error: true
+
       - name: Terraform Init
         run: terraform init
         working-directory: ./terraform

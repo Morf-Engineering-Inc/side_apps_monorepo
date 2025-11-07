@@ -210,6 +210,14 @@ function WelcomePage() {
 					<Flame className="h-4 w-4 text-amber-500/50" />
 					<p className="text-zinc-600">TrueOrient</p>
 				</div>
+				<div className="flex items-center justify-center gap-4 mb-3">
+					<button
+						onClick={() => navigate({ to: "/privacy" })}
+						className="text-zinc-600 hover:text-amber-400 text-sm transition-colors"
+					>
+						Privacy Policy
+					</button>
+				</div>
 				<p className="text-zinc-700 text-sm">
 					&copy; 2025 TrueOrient. All rights reserved.
 				</p>
