@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "description": "Lambda layer with shared dependencies for BecomeLog",
   "private": true,
-  "dependencies": {}
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/util-dynamodb": "^3.700.0",
+    "aws-jwt-verify": "^4.0.1"
+  }
 }

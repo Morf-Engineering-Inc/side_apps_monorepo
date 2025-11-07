@@ -27,10 +27,27 @@ interface User {
 
 interface AuthContextType {
 	user: User | null;
-	login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-	signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean; username?: string }>;
-	confirmSignup: (username: string, code: string) => Promise<{ success: boolean; error?: string }>;
-	resendCode: (username: string) => Promise<{ success: boolean; error?: string }>;
+	login: (
+		email: string,
+		password: string,
+	) => Promise<{ success: boolean; error?: string }>;
+	signup: (
+		email: string,
+		password: string,
+		name: string,
+	) => Promise<{
+		success: boolean;
+		error?: string;
+		needsVerification?: boolean;
+		username?: string;
+	}>;
+	confirmSignup: (
+		username: string,
+		code: string,
+	) => Promise<{ success: boolean; error?: string }>;
+	resendCode: (
+		username: string,
+	) => Promise<{ success: boolean; error?: string }>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -64,7 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 							const newUser: User = {
 								id: payload.sub || payload.username || payload.user_id || "",
 								email:
-									payload.email || payload.username || payload["cognito:username"] || "",
+									payload.email ||
+									payload.username ||
+									payload["cognito:username"] ||
+									"",
 								name:
 									payload.name ||
 									payload.given_name ||
@@ -84,11 +104,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		})();
 	}, []);
 
-	const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+	const login = async (
+		email: string,
+		password: string,
+	): Promise<{ success: boolean; error?: string }> => {
 		// If Cognito is configured, use password authentication API
 		if (cognitoEnabled) {
 			const result = await authenticateWithPassword(email, password);
-			if (result && result.error) {
+			if (result?.error) {
 				return { success: false, error: result.error };
 			}
 			if (result && (result.idToken || result.accessToken)) {
@@ -152,32 +175,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		email: string,
 		password: string,
 		name: string,
-	): Promise<{ success: boolean; error?: string; needsVerification?: boolean; username?: string }> => {
+	): Promise<{
+		success: boolean;
+		error?: string;
+		needsVerification?: boolean;
+		username?: string;
+	}> => {
 		if (cognitoEnabled) {
 			// Use Cognito signup API
 			const result = await signUpWithPassword(email, password, name);
 			if (!result.success) {
 				return { success: false, error: result.error };
 			}
-			
+
 			// If verification is needed, return early without auto-login
 			if (result.needsVerification) {
-				return { 
-					success: true, 
-					needsVerification: true, 
-					username: result.username 
+				return {
+					success: true,
+					needsVerification: true,
+					username: result.username,
 				};
 			}
-			
+
 			// If auto-confirmed, attempt login
 			const loginResult = await login(email, password);
 			if (!loginResult.success) {
 				// Signup succeeded but login failed
-				console.log("Signup successful but login failed - email confirmation may be required");
-				return { 
-					success: true, 
-					needsVerification: true, 
-					username: email 
+				console.log(
+					"Signup successful but login failed - email confirmation may be required",
+				);
+				return {
+					success: true,
+					needsVerification: true,
+					username: email,
 				};
 			}
 			return { success: true };
@@ -185,7 +215,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 		const users = JSON.parse(localStorage.getItem("users") || "[]");
 		if (users.find((u: User) => u.email === email)) {
-			return { success: false, error: "An account with this email already exists" };
+			return {
+				success: false,
+				error: "An account with this email already exists",
+			};
 		}
 
 		const newUser = {
@@ -204,11 +237,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		return { success: true };
 	};
 
-	const confirmSignup = async (username: string, code: string): Promise<{ success: boolean; error?: string }> => {
+	const confirmSignup = async (
+		username: string,
+		code: string,
+	): Promise<{ success: boolean; error?: string }> => {
 		return await confirmSignUp(username, code);
 	};
 
-	const resendCode = async (username: string): Promise<{ success: boolean; error?: string }> => {
+	const resendCode = async (
+		username: string,
+	): Promise<{ success: boolean; error?: string }> => {
 		return await resendConfirmationCode(username);
 	};
 
@@ -225,9 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
 			// Use redirectSignOut if available, otherwise default to origin root
 			const logoutUri =
-				cfg.redirectSignOut || 
-				cfg.logout_uri ||
-				`${window.location.origin}/`;
+				cfg.redirectSignOut || cfg.logout_uri || `${window.location.origin}/`;
 			if (domain && clientId && logoutUri) {
 				const url = new URL(`https://${domain}/logout`);
 				url.searchParams.set("client_id", clientId);

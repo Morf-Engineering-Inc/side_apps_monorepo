@@ -65,6 +65,11 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
+  aliases = [
+    var.domain_name,
+    "www.${var.domain_name}"
+  ]
+
   origin {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.frontend.id}"
@@ -100,7 +105,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate.domain.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   custom_error_response {
@@ -171,12 +178,18 @@ resource "aws_cognito_user_pool_client" "main" {
   callback_urls = [
     "https://${aws_cloudfront_distribution.frontend.domain_name}/",
     "https://${aws_cloudfront_distribution.frontend.domain_name}/callback",
+    "https://${var.domain_name}/",
+    "https://${var.domain_name}/callback",
+    "https://www.${var.domain_name}/",
+    "https://www.${var.domain_name}/callback",
     "http://localhost:3003/",
     "http://localhost:3003/callback"
   ]
 
   logout_urls = [
     "https://${aws_cloudfront_distribution.frontend.domain_name}/",
+    "https://${var.domain_name}/",
+    "https://www.${var.domain_name}/",
     "http://localhost:3003/"
   ]
 
@@ -225,6 +238,80 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# DynamoDB Table for User Entries
+resource "aws_dynamodb_table" "entries" {
+  name         = "${var.app_name}-entries-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "userId"
+  range_key    = "entryId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "entryId"
+    type = "S"
+  }
+
+  attribute {
+    name = "createdAt"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserDateIndex"
+    hash_key        = "userId"
+    range_key       = "createdAt"
+    projection_type = "ALL"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = false
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  tags = {
+    Name = "${var.app_name}-entries"
+  }
+}
+
+# IAM Policy for Lambda to access DynamoDB
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "${var.app_name}-lambda-dynamodb"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.entries.arn,
+          "${aws_dynamodb_table.entries.arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # API Handler Lambda Function
 resource "aws_lambda_function" "api_handler" {
   filename         = "${path.module}/../lambda/functions/api-handler.zip"
@@ -240,7 +327,10 @@ resource "aws_lambda_function" "api_handler" {
 
   environment {
     variables = {
-      ENVIRONMENT = var.environment
+      ENVIRONMENT        = var.environment
+      ENTRIES_TABLE_NAME = aws_dynamodb_table.entries.name
+      USER_POOL_ID       = aws_cognito_user_pool.main.id
+      CLIENT_ID          = aws_cognito_user_pool_client.main.id
     }
   }
 
@@ -279,9 +369,11 @@ resource "aws_apigatewayv2_api" "main" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    # Allow CloudFront domain and localhost for development
+    # Allow CloudFront domain, custom domain, and localhost for development
     allow_origins = [
       "https://${aws_cloudfront_distribution.frontend.domain_name}",
+      "https://${var.domain_name}",
+      "https://www.${var.domain_name}",
       "http://localhost:3003"
     ]
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]

@@ -7,6 +7,7 @@ This directory contains the Terraform configuration for deploying the BecomeLog 
 The infrastructure includes:
 
 - **Frontend Hosting**: S3 + CloudFront
+- **Custom Domain**: trueorient.life with SSL (ACM certificate)
 - **API Backend**: API Gateway + Lambda
 - **Authentication**: AWS Cognito with Hosted UI
 - **State Management**: S3 backend with DynamoDB locking
@@ -17,6 +18,8 @@ The infrastructure includes:
 - S3 bucket for static assets (private)
 - CloudFront distribution with OAI
 - Custom error responses for SPA routing
+- ACM certificate for SSL (us-east-1)
+- Custom domain aliases (trueorient.life, www.trueorient.life)
 
 ### Authentication
 - Cognito User Pool with email verification
@@ -61,6 +64,16 @@ variable "app_name" {
 
 variable "aws_application_tag" {
   description = "AWS Application tag for resource grouping"
+}
+
+variable "domain_name" {
+  description = "Custom domain name"
+  default     = "trueorient.life"
+}
+
+variable "create_route53_zone" {
+  description = "Whether to create a new Route53 hosted zone"
+  default     = false  # DNS managed on Namecheap
 }
 ```
 
@@ -114,6 +127,10 @@ output "api_gateway_url"          # API Gateway endpoint
 output "cognito_user_pool_id"     # Cognito User Pool ID
 output "cognito_client_id"        # Cognito Client ID
 output "cognito_domain"           # Cognito Hosted UI domain
+output "certificate_arn"          # ACM certificate ARN
+output "custom_domain_url"        # Custom domain URL (https://trueorient.life)
+output "acm_validation_records"   # DNS validation records for Namecheap
+output "nameserver_instructions"  # Complete DNS setup instructions
 ```
 
 ## Authentication Setup
@@ -283,6 +300,7 @@ See `.github/workflows/deploy-become.yml` for details.
 
 ## Documentation
 
+- [Custom Domain Setup Guide](../docs/CUSTOM_DOMAIN_SETUP.md) - How to configure trueorient.life with SSL
 - [Cognito Setup Guide](../docs/COGNITO_SETUP.md) - Authentication configuration
 - [Deployment Fixes](../docs/DEPLOYMENT_FIXES.md) - Recent infrastructure fixes
 - [Main README](../README.md) - Project overview

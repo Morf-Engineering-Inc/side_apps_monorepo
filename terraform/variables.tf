@@ -21,3 +21,21 @@ variable "aws_application_tag" {
   type        = string
   default     = ""
 }
+
+variable "aws_application_tag_key" {
+  description = "AWS Application tag key for resource grouping"
+  type        = string
+  default     = "awsApplication"
+}
+
+variable "domain_name" {
+  description = "Custom domain name"
+  type        = string
+  default     = "trueorient.life"
+}
+
+variable "create_route53_zone" {
+  description = "Whether to create a new Route53 hosted zone"
+  type        = bool
+  default     = false # Set to false since DNS is managed on Namecheap
+}

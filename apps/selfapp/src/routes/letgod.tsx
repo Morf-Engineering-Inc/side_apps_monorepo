@@ -10,8 +10,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	type LetGodEntry,
+	createLetGodEntry,
+	deleteLetGodEntry,
+	listLetGodEntries,
+} from "@/lib/api-client-entities";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle, Circle, Heart, Sparkles, Target } from "lucide-react";
+import {
+	CheckCircle,
+	Circle,
+	Heart,
+	Loader2,
+	Sparkles,
+	Target,
+	Trash2,
+} from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 
@@ -19,23 +35,11 @@ export const Route = createFileRoute("/letgod")({
 	component: RouteComponent,
 });
 
-type SpiritualEntry = {
-	id: number;
-	date: string;
-	situation: string;
-	seekingPrompt: string;
-	holyGhostGuidance: string;
-	myDesire: string;
-	godsWill: string;
-	actionTaken: string;
-	alignment: "aligned" | "partial" | "struggling";
-	reflection: string;
-};
-
-const STORAGE_KEY = "letgod:entries";
-
 function RouteComponent() {
-	const [entries, setEntries] = useState<SpiritualEntry[]>([]);
+	const [entries, setEntries] = useState<LetGodEntry[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [submitting, setSubmitting] = useState(false);
+
 	const [situation, setSituation] = useState("");
 	const [seekingPrompt, setSeekingPrompt] = useState("");
 	const [holyGhostGuidance, setHolyGhostGuidance] = useState("");
@@ -48,20 +52,34 @@ function RouteComponent() {
 	const [reflection, setReflection] = useState("");
 	const [saveMessage, setSaveMessage] = useState("");
 
+	// Load entries from API
 	useEffect(() => {
-		const saved = localStorage.getItem(STORAGE_KEY);
-		if (saved) {
+		const loadEntries = async () => {
 			try {
-				setEntries(JSON.parse(saved));
-			} catch (e) {
-				console.error("Failed to parse Let God Prevail entries", e);
+				setLoading(true);
+				const data = await listLetGodEntries();
+				// Sort by date descending (most recent first)
+				const sorted = data.sort(
+					(a, b) =>
+						new Date(b.date || b.createdAt || "").getTime() -
+						new Date(a.date || a.createdAt || "").getTime(),
+				);
+				setEntries(sorted);
+			} catch (error) {
+				console.error("Failed to load Let God Prevail entries:", error);
+				const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to load entries: ${errorMessage}`);
+				}
+			} finally {
+				setLoading(false);
 			}
-		}
+		};
+		loadEntries();
 	}, []);
-
-	useEffect(() => {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-	}, [entries]);
 
 	const resetForm = () => {
 		setSituation("");
@@ -74,7 +92,7 @@ function RouteComponent() {
 		setReflection("");
 	};
 
-	const handleSubmit = (e?: React.FormEvent) => {
+	const handleSubmit = async (e?: React.FormEvent) => {
 		e?.preventDefault();
 		if (!situation.trim() || !actionTaken.trim()) {
 			setSaveMessage("Please fill in the situation and action taken.");
@@ -82,23 +100,59 @@ function RouteComponent() {
 			return;
 		}
 
-		const entry: SpiritualEntry = {
-			id: Date.now(),
-			date: new Date().toISOString(),
-			situation: situation.trim(),
-			seekingPrompt: seekingPrompt.trim(),
-			holyGhostGuidance: holyGhostGuidance.trim(),
-			myDesire: myDesire.trim(),
-			godsWill: godsWill.trim(),
-			actionTaken: actionTaken.trim(),
-			alignment,
-			reflection: reflection.trim(),
-		};
+		setSubmitting(true);
+		try {
+			const entry = await createLetGodEntry({
+				date: new Date().toISOString(),
+				situation: situation.trim(),
+				seekingPrompt: seekingPrompt.trim(),
+				holyGhostGuidance: holyGhostGuidance.trim(),
+				myDesire: myDesire.trim(),
+				godsWill: godsWill.trim(),
+				actionTaken: actionTaken.trim(),
+				alignment,
+				reflection: reflection.trim(),
+			});
 
-		setEntries((prev) => [...prev, entry]);
-		setSaveMessage("Entry saved with gratitude 🙏");
-		setTimeout(() => setSaveMessage(""), 3000);
-		resetForm();
+			setEntries((prev) => [entry, ...prev]);
+			setSaveMessage("Entry saved with gratitude 🙏");
+			setTimeout(() => setSaveMessage(""), 3000);
+			resetForm();
+		} catch (error) {
+			console.error("Failed to save entry:", error);
+			const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to save: ${errorMessage}`);
+				}
+			setTimeout(() => setSaveMessage(""), 5000);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	const handleDelete = async (entryId: string | undefined) => {
+		if (!entryId) return;
+		if (!confirm("Are you sure you want to delete this entry?")) return;
+
+		try {
+			await deleteLetGodEntry(entryId);
+			setEntries((prev) => prev.filter((e) => e.entryId !== entryId));
+			setSaveMessage("Entry deleted");
+			setTimeout(() => setSaveMessage(""), 2000);
+		} catch (error) {
+			console.error("Failed to delete entry:", error);
+			const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to delete: ${errorMessage}`);
+				}
+			setTimeout(() => setSaveMessage(""), 5000);
+		}
 	};
 
 	const alignmentStats = () => {
@@ -119,6 +173,17 @@ function RouteComponent() {
 	};
 
 	const stats = alignmentStats();
+
+	if (loading) {
+		return (
+			<Card>
+				<CardContent className="p-12 text-center">
+					<Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+					<p className="app-text-subtle">Loading your entries...</p>
+				</CardContent>
+			</Card>
+		);
+	}
 
 	return (
 		<div className="space-y-6 max-w-4xl mx-auto">
@@ -334,16 +399,38 @@ function RouteComponent() {
 								type="submit"
 								size="lg"
 								className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+								disabled={submitting}
 							>
-								<Heart className="mr-2 h-4 w-4" />
-								Save with Gratitude
+								{submitting ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										Saving...
+									</>
+								) : (
+									<>
+										<Heart className="mr-2 h-4 w-4" />
+										Save with Gratitude
+									</>
+								)}
 							</Button>
-							<Button variant="outline" onClick={resetForm} size="lg">
+							<Button
+								variant="outline"
+								onClick={resetForm}
+								size="lg"
+								disabled={submitting}
+							>
 								Clear
 							</Button>
 						</div>
 						{saveMessage && (
-							<p className="text-sm text-center font-medium text-blue-600 dark:text-blue-400">
+							<p
+								className={getMessageClassName(
+									saveMessage,
+									"text-sm text-center font-medium",
+									"text-red-600",
+									"text-blue-600 dark:text-blue-400",
+								)}
+							>
 								{saveMessage}
 							</p>
 						)}
@@ -361,23 +448,23 @@ function RouteComponent() {
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-4">
-							{entries
-								.slice(-5)
-								.reverse()
-								.map((entry) => (
-									<div
-										key={entry.id}
-										className="border app-border-default rounded-lg p-4 space-y-3 app-bg-surface-alt"
-									>
-										<div className="flex justify-between items-start">
-											<div>
-												<h4 className="font-semibold app-text-strong">
-													{entry.situation}
-												</h4>
-												<p className="text-xs app-text-muted">
-													{new Date(entry.date).toLocaleString()}
-												</p>
-											</div>
+							{entries.slice(0, 20).map((entry) => (
+								<div
+									key={entry.entryId}
+									className="border app-border-default rounded-lg p-4 space-y-3 app-bg-surface-alt"
+								>
+									<div className="flex justify-between items-start gap-3">
+										<div className="flex-1">
+											<h4 className="font-semibold app-text-strong">
+												{entry.situation}
+											</h4>
+											<p className="text-xs app-text-muted">
+												{new Date(
+													entry.date || entry.createdAt || "",
+												).toLocaleString()}
+											</p>
+										</div>
+										<div className="flex items-center gap-2">
 											<Badge
 												variant={
 													entry.alignment === "aligned"
@@ -396,40 +483,49 @@ function RouteComponent() {
 											>
 												{entry.alignment}
 											</Badge>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => handleDelete(entry.entryId)}
+												className="h-8 w-8 p-0"
+											>
+												<Trash2 className="h-4 w-4 text-red-500" />
+											</Button>
 										</div>
+									</div>
 
-										{entry.holyGhostGuidance && (
-											<div>
-												<p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">
-													Divine Guidance
-												</p>
-												<p className="text-sm app-text-subtle italic">
-													"{entry.holyGhostGuidance}"
-												</p>
-											</div>
-										)}
-
+									{entry.holyGhostGuidance && (
 										<div>
-											<p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-												Action Taken
+											<p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">
+												Divine Guidance
+											</p>
+											<p className="text-sm app-text-subtle italic">
+												"{entry.holyGhostGuidance}"
+											</p>
+										</div>
+									)}
+
+									<div>
+										<p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+											Action Taken
+										</p>
+										<p className="text-sm app-text-subtle">
+											{entry.actionTaken}
+										</p>
+									</div>
+
+									{entry.reflection && (
+										<div>
+											<p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
+												Reflection
 											</p>
 											<p className="text-sm app-text-subtle">
-												{entry.actionTaken}
+												{entry.reflection}
 											</p>
 										</div>
-
-										{entry.reflection && (
-											<div>
-												<p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
-													Reflection
-												</p>
-												<p className="text-sm app-text-subtle">
-													{entry.reflection}
-												</p>
-											</div>
-										)}
-									</div>
-								))}
+									)}
+								</div>
+							))}
 						</div>
 					</CardContent>
 				</Card>

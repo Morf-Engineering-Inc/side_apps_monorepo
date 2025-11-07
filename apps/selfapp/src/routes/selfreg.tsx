@@ -9,8 +9,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	type SelfRegEntry,
+	createSelfRegEntry,
+	deleteSelfRegEntry,
+	listSelfRegEntries,
+} from "@/lib/api-client-entities";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Loader2, Sparkles, Trash2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 
@@ -18,19 +26,10 @@ export const Route = createFileRoute("/selfreg")({
 	component: RouteComponent,
 });
 
-type Entry = {
-	id: number;
-	createdAt: string;
-	trigger: string;
-	distraction: string | null;
-	choice: string;
-	identity: "inward" | "outward";
-};
-
-const STORAGE_KEY = "selfreg:entries";
-
 function RouteComponent() {
-	const [entries, setEntries] = useState<Entry[]>([]);
+	const [entries, setEntries] = useState<SelfRegEntry[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [submitting, setSubmitting] = useState(false);
 
 	const [trigger, setTrigger] = useState("");
 	const [distraction, setDistraction] = useState("");
@@ -38,20 +37,34 @@ function RouteComponent() {
 	const [identity, setIdentity] = useState<"inward" | "outward">("inward");
 	const [saveMessage, setSaveMessage] = useState("");
 
+	// Load entries from API
 	useEffect(() => {
-		const saved = localStorage.getItem(STORAGE_KEY);
-		if (saved) {
+		const loadEntries = async () => {
 			try {
-				setEntries(JSON.parse(saved));
-			} catch (e) {
-				console.error("Failed to parse self-reg entries", e);
+				setLoading(true);
+				const data = await listSelfRegEntries();
+				// Sort by createdAt descending (most recent first)
+				const sorted = data.sort(
+					(a, b) =>
+						new Date(b.createdAt || "").getTime() -
+						new Date(a.createdAt || "").getTime(),
+				);
+				setEntries(sorted);
+			} catch (error) {
+				console.error("Failed to load self-reg entries:", error);
+				const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to load entries: ${errorMessage}`);
+				}
+			} finally {
+				setLoading(false);
 			}
-		}
+		};
+		loadEntries();
 	}, []);
-
-	useEffect(() => {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-	}, [entries]);
 
 	const resetForm = () => {
 		setTrigger("");
@@ -60,7 +73,7 @@ function RouteComponent() {
 		setIdentity("inward");
 	};
 
-	const handleSubmit = (e?: React.FormEvent) => {
+	const handleSubmit = async (e?: React.FormEvent) => {
 		e?.preventDefault();
 		if (!trigger.trim() || !choice.trim()) {
 			setSaveMessage("Please fill Trigger and Choice (2 required fields).");
@@ -68,19 +81,54 @@ function RouteComponent() {
 			return;
 		}
 
-		const entry: Entry = {
-			id: Date.now(),
-			createdAt: new Date().toISOString(),
-			trigger: trigger.trim(),
-			distraction: distraction.trim() || null,
-			choice: choice.trim(),
-			identity,
-		};
+		setSubmitting(true);
+		try {
+			const entry = await createSelfRegEntry({
+				trigger: trigger.trim(),
+				distraction: distraction.trim() || null,
+				choice: choice.trim(),
+				identity,
+			});
 
-		setEntries((s) => [...s, entry]);
-		setSaveMessage("Saved");
-		setTimeout(() => setSaveMessage(""), 2000);
-		resetForm();
+			setEntries((prev) => [entry, ...prev]);
+			setSaveMessage("Saved successfully!");
+			setTimeout(() => setSaveMessage(""), 2000);
+			resetForm();
+		} catch (error) {
+			console.error("Failed to save entry:", error);
+			const authError = getAuthErrorMessage(error);
+			if (authError) {
+				setSaveMessage(authError);
+			} else {
+				const errorMessage = error instanceof Error ? error.message : "Unknown error";
+				setSaveMessage(`Failed to save: ${errorMessage}`);
+			}
+			setTimeout(() => setSaveMessage(""), 5000);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	const handleDelete = async (entryId: string | undefined) => {
+		if (!entryId) return;
+		if (!confirm("Are you sure you want to delete this entry?")) return;
+
+		try {
+			await deleteSelfRegEntry(entryId);
+			setEntries((prev) => prev.filter((e) => e.entryId !== entryId));
+			setSaveMessage("Entry deleted");
+			setTimeout(() => setSaveMessage(""), 2000);
+		} catch (error) {
+			console.error("Failed to delete entry:", error);
+			const authError = getAuthErrorMessage(error);
+			if (authError) {
+				setSaveMessage(authError);
+			} else {
+				const errorMessage = error instanceof Error ? error.message : "Unknown error";
+				setSaveMessage(`Failed to delete: ${errorMessage}`);
+			}
+			setTimeout(() => setSaveMessage(""), 5000);
+		}
 	};
 
 	// Coach summary for last 7 entries (or last 7 days if available)
@@ -116,6 +164,17 @@ function RouteComponent() {
 
 	const summary = coachSummary();
 
+	if (loading) {
+		return (
+			<Card>
+				<CardContent className="p-12 text-center">
+					<Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+					<p className="app-text-subtle">Loading your entries...</p>
+				</CardContent>
+			</Card>
+		);
+	}
+
 	return (
 		<div className="space-y-6">
 			<div className="text-center">
@@ -138,6 +197,7 @@ function RouteComponent() {
 								placeholder="e.g., stress, boredom, hunger, phone"
 								value={trigger}
 								onChange={(e) => setTrigger(e.target.value)}
+								disabled={submitting}
 							/>
 						</div>
 
@@ -147,6 +207,7 @@ function RouteComponent() {
 								placeholder="scroll, sugar, withdraw, lash out"
 								value={distraction}
 								onChange={(e) => setDistraction(e.target.value)}
+								disabled={submitting}
 							/>
 						</div>
 
@@ -157,6 +218,7 @@ function RouteComponent() {
 								value={choice}
 								onChange={(e) => setChoice(e.target.value)}
 								rows={2}
+								disabled={submitting}
 							/>
 						</div>
 
@@ -167,6 +229,7 @@ function RouteComponent() {
 									type="button"
 									className={`px-3 py-2 rounded ${identity === "inward" ? "bg-zinc-200 dark:bg-zinc-700" : "border"}`}
 									onClick={() => setIdentity("inward")}
+									disabled={submitting}
 								>
 									⬅ inward
 								</button>
@@ -174,6 +237,7 @@ function RouteComponent() {
 									type="button"
 									className={`px-3 py-2 rounded ${identity === "outward" ? "bg-zinc-200 dark:bg-zinc-700" : "border"}`}
 									onClick={() => setIdentity("outward")}
+									disabled={submitting}
 								>
 									outward ➡
 								</button>
@@ -185,15 +249,29 @@ function RouteComponent() {
 								onClick={() => handleSubmit()}
 								size="lg"
 								className="flex-1"
+								disabled={submitting}
 							>
-								<Check className="mr-2 h-4 w-4" /> Save
+								{submitting ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+									</>
+								) : (
+									<>
+										<Check className="mr-2 h-4 w-4" /> Save
+									</>
+								)}
 							</Button>
-							<Button variant="outline" onClick={resetForm} size="lg">
+							<Button
+								variant="outline"
+								onClick={resetForm}
+								size="lg"
+								disabled={submitting}
+							>
 								Clear
 							</Button>
 						</div>
 						{saveMessage && (
-							<p className="text-sm app-text-strong">{saveMessage}</p>
+							<p className={getMessageClassName(saveMessage)}>{saveMessage}</p>
 						)}
 					</form>
 				</CardContent>
@@ -214,37 +292,43 @@ function RouteComponent() {
 				<Card>
 					<CardHeader>
 						<CardTitle>Recent Moments</CardTitle>
+						<CardDescription>{entries.length} total entries</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-3">
-							{entries
-								.slice(-10)
-								.reverse()
-								.map((e) => (
-									<div key={e.id} className="border rounded p-3">
-										<div className="flex justify-between items-start">
-											<div>
-												<p className="font-medium">{e.choice}</p>
-												<p className="text-xs app-text-muted">
-													{new Date(e.createdAt).toLocaleString()}
-												</p>
-											</div>
-											<div className="text-right">
-												<p className="text-xs app-text-subtle">
-													Trigger: {e.trigger}
-												</p>
-												{e.distraction && (
-													<p className="text-xs app-text-subtle">
-														Wanted: {e.distraction}
-													</p>
-												)}
-												<p className="text-xs mt-1 font-medium">
-													{e.identity === "outward" ? "➡ outward" : "⬅ inward"}
-												</p>
-											</div>
+							{entries.slice(0, 20).map((e) => (
+								<div key={e.entryId} className="border rounded p-3">
+									<div className="flex justify-between items-start gap-3">
+										<div className="flex-1">
+											<p className="font-medium">{e.choice}</p>
+											<p className="text-xs app-text-muted">
+												{new Date(e.createdAt || "").toLocaleString()}
+											</p>
 										</div>
+										<div className="text-right flex-shrink-0">
+											<p className="text-xs app-text-subtle">
+												Trigger: {e.trigger}
+											</p>
+											{e.distraction && (
+												<p className="text-xs app-text-subtle">
+													Impulse: {e.distraction}
+												</p>
+											)}
+											<p className="text-xs font-medium">
+												{e.identity === "outward" ? "outward ➡" : "⬅ inward"}
+											</p>
+										</div>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => handleDelete(e.entryId)}
+											className="h-8 w-8 p-0"
+										>
+											<Trash2 className="h-4 w-4 text-red-500" />
+										</Button>
 									</div>
-								))}
+								</div>
+							))}
 						</div>
 					</CardContent>
 				</Card>
