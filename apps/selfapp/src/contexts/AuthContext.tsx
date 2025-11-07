@@ -1,10 +1,12 @@
 import {
 	authenticateWithPassword,
+	confirmSignUp,
 	getAuthTokenAsync,
 	handleCognitoCallback,
 	initializeAuthIntegration,
 	isCognitoConfigured,
 	loginWithCognito,
+	resendConfirmationCode,
 	setAuthTokenAsync,
 	signUpWithPassword,
 } from "@/lib/auth-integration";
@@ -25,8 +27,10 @@ interface User {
 
 interface AuthContextType {
 	user: User | null;
-	login: (email: string, password: string) => Promise<boolean>;
-	signup: (email: string, password: string, name: string) => Promise<boolean>;
+	login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+	signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean; username?: string }>;
+	confirmSignup: (username: string, code: string) => Promise<{ success: boolean; error?: string }>;
+	resendCode: (username: string) => Promise<{ success: boolean; error?: string }>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -80,12 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		})();
 	}, []);
 
-	const login = async (email: string, password: string): Promise<boolean> => {
+	const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
 		// If Cognito is configured, use password authentication API
 		if (cognitoEnabled) {
-			const tokens = await authenticateWithPassword(email, password);
-			if (tokens && (tokens.idToken || tokens.accessToken)) {
-				const token = tokens.idToken || tokens.accessToken;
+			const result = await authenticateWithPassword(email, password);
+			if (result && result.error) {
+				return { success: false, error: result.error };
+			}
+			if (result && (result.idToken || result.accessToken)) {
+				const token = result.idToken || result.accessToken;
 				await setAuthTokenAsync(token as string);
 
 				// Decode token and set user
@@ -116,9 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 					console.error("Failed to parse JWT payload", e);
 				}
 
-				return true;
+				return { success: true };
 			}
-			return false;
+			// Return false on error - the error message is handled in the login component
+			return { success: false, error: "Login failed. Please try again" };
 		}
 
 		// Local fallback (existing behavior)
@@ -135,40 +143,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			setUser(userWithoutPassword);
 			localStorage.setItem("user", JSON.stringify(userWithoutPassword));
 			await setAuthTokenAsync("local-fallback-token");
-			return true;
+			return { success: true };
 		}
-		return false;
+		return { success: false, error: "Invalid email or password" };
 	};
 
 	const signup = async (
 		email: string,
 		password: string,
 		name: string,
-	): Promise<boolean> => {
+	): Promise<{ success: boolean; error?: string; needsVerification?: boolean; username?: string }> => {
 		if (cognitoEnabled) {
 			// Use Cognito signup API
-			const success = await signUpWithPassword(email, password, name);
-			if (success) {
-				// Note: After signup, the user may need to confirm their email
-				// If auto-verification is disabled, login will fail until confirmed
-				// For better UX, you should check the signup response and show
-				// a confirmation screen instead of auto-login
-				// For now, we'll attempt login which will work if auto-verification is enabled
-				const loginSuccess = await login(email, password);
-				if (!loginSuccess) {
-					// Signup succeeded but login failed - likely needs email confirmation
-					console.log(
-						"Signup successful but login failed - email confirmation may be required",
-					);
-					// In a production app, show a "Please check your email" message
-				}
-				return true;
+			const result = await signUpWithPassword(email, password, name);
+			if (!result.success) {
+				return { success: false, error: result.error };
 			}
-			return false;
+			
+			// If verification is needed, return early without auto-login
+			if (result.needsVerification) {
+				return { 
+					success: true, 
+					needsVerification: true, 
+					username: result.username 
+				};
+			}
+			
+			// If auto-confirmed, attempt login
+			const loginResult = await login(email, password);
+			if (!loginResult.success) {
+				// Signup succeeded but login failed
+				console.log("Signup successful but login failed - email confirmation may be required");
+				return { 
+					success: true, 
+					needsVerification: true, 
+					username: email 
+				};
+			}
+			return { success: true };
 		}
 
 		const users = JSON.parse(localStorage.getItem("users") || "[]");
-		if (users.find((u: User) => u.email === email)) return false;
+		if (users.find((u: User) => u.email === email)) {
+			return { success: false, error: "An account with this email already exists" };
+		}
 
 		const newUser = {
 			id: crypto.randomUUID(),
@@ -183,7 +201,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUser(userWithoutPassword);
 		localStorage.setItem("user", JSON.stringify(userWithoutPassword));
 		await setAuthTokenAsync("local-fallback-token");
-		return true;
+		return { success: true };
+	};
+
+	const confirmSignup = async (username: string, code: string): Promise<{ success: boolean; error?: string }> => {
+		return await confirmSignUp(username, code);
+	};
+
+	const resendCode = async (username: string): Promise<{ success: boolean; error?: string }> => {
+		return await resendConfirmationCode(username);
 	};
 
 	const logout = () => {
@@ -197,16 +223,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			const domain = cfg.cognitoDomain || cfg.cognito_domain || cfg.domain;
 			const clientId =
 				cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
-			const redirectUri =
-				cfg.redirectUri || window.location.origin + window.location.pathname;
-			if (domain && clientId) {
+			// Use redirectSignOut if available, otherwise default to origin root
+			const logoutUri =
+				cfg.redirectSignOut || 
+				cfg.logout_uri ||
+				`${window.location.origin}/`;
+			if (domain && clientId && logoutUri) {
 				const url = new URL(`https://${domain}/logout`);
 				url.searchParams.set("client_id", clientId);
-				url.searchParams.set("logout_uri", redirectUri);
+				url.searchParams.set("logout_uri", logoutUri);
+				console.log("Redirecting to Cognito logout:", url.toString());
 				window.location.href = url.toString();
 			}
 		} catch (e) {
-			// ignore
+			console.error("Error during logout redirect:", e);
+			// Still clear local state even if redirect fails
 		}
 	};
 
@@ -216,6 +247,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				user,
 				login,
 				signup,
+				confirmSignup,
+				resendCode,
 				logout,
 				isAuthenticated: !!user,
 			}}

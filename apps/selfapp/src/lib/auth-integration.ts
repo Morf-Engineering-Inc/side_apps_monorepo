@@ -294,7 +294,7 @@ export function createAuthenticatedFetch(): typeof fetch {
 async function authenticateWithPassword(
 	username: string,
 	password: string,
-): Promise<{ idToken?: string; accessToken?: string } | null> {
+): Promise<{ idToken?: string; accessToken?: string; error?: string } | null> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -305,14 +305,14 @@ async function authenticateWithPassword(
 
 		if (!userPoolId || !clientId) {
 			console.error("Cognito not configured for password authentication");
-			return null;
+			return { error: "Authentication service not configured" };
 		}
 
 		// Validate and extract region from user pool ID (format: us-east-1_xxxxxxxxx)
 		const parts = userPoolId.split("_");
 		if (parts.length !== 2) {
 			console.error("Invalid user pool ID format:", userPoolId);
-			return null;
+			return { error: "Authentication service configuration error" };
 		}
 		const region = parts[0];
 
@@ -357,7 +357,29 @@ async function authenticateWithPassword(
 					response.status,
 					errorText,
 				);
-				return null;
+				
+				// Parse Cognito error response
+				let errorMessage = "Invalid email or password";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+					
+					if (errorCode === "UserNotFoundException" || errorCode === "NotAuthorizedException") {
+						errorMessage = "Invalid email or password";
+					} else if (errorCode === "UserNotConfirmedException") {
+						errorMessage = "Please verify your email before signing in";
+					} else if (errorCode === "TooManyRequestsException") {
+						errorMessage = "Too many attempts. Please try again later";
+					} else if (errorCode === "PasswordResetRequiredException") {
+						errorMessage = "Password reset required";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+				
+				return { error: errorMessage };
 			}
 
 			const result = await response.json();
@@ -376,21 +398,21 @@ async function authenticateWithPassword(
 					"Authentication challenge required:",
 					result.ChallengeName,
 				);
-				return null;
+				return { error: "Additional authentication steps required" };
 			}
 
-			return null;
+			return { error: "Authentication failed" };
 		} catch (error) {
 			clearTimeout(timeoutId);
 			if (error instanceof Error && error.name === "AbortError") {
 				console.error("Authentication request timed out");
-				return null;
+				return { error: "Request timed out. Please try again" };
 			}
 			throw error;
 		}
 	} catch (error) {
 		console.error("Error authenticating with password:", error);
-		return null;
+		return { error: "An unexpected error occurred. Please try again" };
 	}
 }
 
@@ -401,7 +423,7 @@ async function signUpWithPassword(
 	email: string,
 	password: string,
 	name: string,
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string; needsVerification?: boolean; username?: string }> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -412,14 +434,14 @@ async function signUpWithPassword(
 
 		if (!userPoolId || !clientId) {
 			console.error("Cognito not configured for signup");
-			return false;
+			return { success: false, error: "Authentication service not configured" };
 		}
 
 		// Validate and extract region from user pool ID
 		const parts = userPoolId.split("_");
 		if (parts.length !== 2) {
 			console.error("Invalid user pool ID format:", userPoolId);
-			return false;
+			return { success: false, error: "Authentication service configuration error" };
 		}
 		const region = parts[0];
 
@@ -463,25 +485,54 @@ async function signUpWithPassword(
 			if (!response.ok) {
 				const errorText = await response.text();
 				console.error("Signup failed:", response.status, errorText);
-				return false;
+				
+				// Parse Cognito error response
+				let errorMessage = "Signup failed. Please try again";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+					
+					if (errorCode === "UsernameExistsException") {
+						errorMessage = "An account with this email already exists";
+					} else if (errorCode === "InvalidPasswordException") {
+						errorMessage = "Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
+					} else if (errorCode === "InvalidParameterException") {
+						errorMessage = "Invalid email or password format";
+					} else if (errorCode === "TooManyRequestsException") {
+						errorMessage = "Too many attempts. Please try again later";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+				
+				return { success: false, error: errorMessage };
 			}
 
-			await response.json();
+			const result = await response.json();
 			console.log("Signup successful, confirmation may be required");
 
+			// Check if user needs to confirm their email
+			const needsVerification = !result.UserConfirmed;
+			
 			// Note: User may need to confirm their email before they can sign in
-			return true;
+			return { 
+				success: true, 
+				needsVerification,
+				username: email
+			};
 		} catch (error) {
 			clearTimeout(timeoutId);
 			if (error instanceof Error && error.name === "AbortError") {
 				console.error("Signup request timed out");
-				return false;
+				return { success: false, error: "Request timed out. Please try again" };
 			}
 			throw error;
 		}
 	} catch (error) {
 		console.error("Error signing up:", error);
-		return false;
+		return { success: false, error: "An unexpected error occurred. Please try again" };
 	}
 }
 
@@ -785,9 +836,197 @@ export async function setAuthTokenAsync(token: string | null): Promise<void> {
 // NOTE: getAuthTokenAsync/setAuthTokenAsync are exported above; no duplicate definitions.
 
 /**
+ * Confirm user signup with verification code
+ */
+async function confirmSignUp(
+	username: string,
+	code: string,
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const cfg =
+			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+		const userPoolId =
+			cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+		const clientId =
+			cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+		if (!userPoolId || !clientId) {
+			console.error("Cognito not configured");
+			return { success: false, error: "Authentication service not configured" };
+		}
+
+		// Validate and extract region from user pool ID
+		const parts = userPoolId.split("_");
+		if (parts.length !== 2) {
+			console.error("Invalid user pool ID format:", userPoolId);
+			return { success: false, error: "Authentication service configuration error" };
+		}
+		const region = parts[0];
+
+		const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+		const requestBody = {
+			ClientId: clientId,
+			Username: username,
+			ConfirmationCode: code,
+		};
+
+		console.log("Confirming signup with verification code...");
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-amz-json-1.1",
+					"X-Amz-Target": "AWSCognitoIdentityProviderService.ConfirmSignUp",
+				},
+				body: JSON.stringify(requestBody),
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("Confirmation failed:", response.status, errorText);
+				
+				let errorMessage = "Verification failed. Please try again";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+					
+					if (errorCode === "CodeMismatchException") {
+						errorMessage = "Invalid verification code. Please check and try again";
+					} else if (errorCode === "ExpiredCodeException") {
+						errorMessage = "Verification code has expired. Please request a new one";
+					} else if (errorCode === "NotAuthorizedException") {
+						errorMessage = "User is already confirmed";
+					} else if (errorCode === "TooManyRequestsException") {
+						errorMessage = "Too many attempts. Please try again later";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+				
+				return { success: false, error: errorMessage };
+			}
+
+			console.log("Signup confirmed successfully");
+			return { success: true };
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === "AbortError") {
+				console.error("Confirmation request timed out");
+				return { success: false, error: "Request timed out. Please try again" };
+			}
+			throw error;
+		}
+	} catch (error) {
+		console.error("Error confirming signup:", error);
+		return { success: false, error: "An unexpected error occurred. Please try again" };
+	}
+}
+
+/**
+ * Resend verification code
+ */
+async function resendConfirmationCode(
+	username: string,
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const cfg =
+			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+		const userPoolId =
+			cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+		const clientId =
+			cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+		if (!userPoolId || !clientId) {
+			console.error("Cognito not configured");
+			return { success: false, error: "Authentication service not configured" };
+		}
+
+		// Validate and extract region from user pool ID
+		const parts = userPoolId.split("_");
+		if (parts.length !== 2) {
+			console.error("Invalid user pool ID format:", userPoolId);
+			return { success: false, error: "Authentication service configuration error" };
+		}
+		const region = parts[0];
+
+		const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+		const requestBody = {
+			ClientId: clientId,
+			Username: username,
+		};
+
+		console.log("Resending confirmation code...");
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-amz-json-1.1",
+					"X-Amz-Target": "AWSCognitoIdentityProviderService.ResendConfirmationCode",
+				},
+				body: JSON.stringify(requestBody),
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("Resend failed:", response.status, errorText);
+				
+				let errorMessage = "Failed to resend code. Please try again";
+				try {
+					const errorData = JSON.parse(errorText);
+					const errorCode = errorData.__type || errorData.code;
+					
+					if (errorCode === "LimitExceededException" || errorCode === "TooManyRequestsException") {
+						errorMessage = "Too many attempts. Please wait a few minutes before trying again";
+					} else if (errorCode === "InvalidParameterException") {
+						errorMessage = "User is already confirmed";
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					}
+				} catch (e) {
+					// Use default error message
+				}
+				
+				return { success: false, error: errorMessage };
+			}
+
+			console.log("Confirmation code resent successfully");
+			return { success: true };
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === "AbortError") {
+				console.error("Resend request timed out");
+				return { success: false, error: "Request timed out. Please try again" };
+			}
+			throw error;
+		}
+	} catch (error) {
+		console.error("Error resending confirmation code:", error);
+		return { success: false, error: "An unexpected error occurred. Please try again" };
+	}
+}
+
+/**
  * Authenticate with Cognito using username and password (for custom login form)
  */
-export { authenticateWithPassword, signUpWithPassword };
+export { authenticateWithPassword, signUpWithPassword, confirmSignUp, resendConfirmationCode };
 
 // Export default for convenience
 export default authIntegration;
