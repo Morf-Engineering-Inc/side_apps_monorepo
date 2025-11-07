@@ -5,7 +5,11 @@ The Development of a Grand Character
 
 A Christlike Character
 “What is the crowning glory of man in this earth so far as his individual achievement is concerned? It is character—character developed through obedience to the laws of life as revealed through the Gospel of Jesus Christ, who came that we might have life and have it more abundantly. Man’s chief concern in life should not be the acquiring of gold nor fame nor material possessions. It should not be the development of physical prowess nor of intellectual strength, but his aim, the highest in life, should be the development of a Christlike character” (“Obedience Develops Character,” Instructor, August 1965, 301).
+What if the most important thing about any action isn't WHAT you're doing, but WHY you're doing it or HOW (your intent)?
 
+Built TrueOrient to help answer that question. It's a tool for identifying motivations rooted in love rather than fear, ego, or obligation.
+
+Your heart points somewhere in every moment. Make it count.
 The Core Truth:
 Your heart has a direction in every moment → that direction shapes your becoming
 The Operating Principle:
