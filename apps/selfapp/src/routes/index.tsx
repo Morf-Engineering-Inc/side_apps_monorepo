@@ -70,7 +70,7 @@ function Index() {
 	useEffect(() => {
 		(window as any).__setMainTab = handleTabChange;
 		return () => {
-			delete (window as any).__setMainTab;
+			(window as any).__setMainTab = undefined;
 		};
 	}, []);
 
