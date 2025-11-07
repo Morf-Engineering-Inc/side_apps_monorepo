@@ -19,6 +19,7 @@ import {
 	listDailyLogs,
 	updateDailyLog,
 } from "@/lib/api-client-entities";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import type { Task } from "@/types/task-tracking";
 import {
 	createFileRoute,
@@ -40,7 +41,6 @@ import {
 	User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/")({
 	component: Index,
@@ -72,7 +72,7 @@ function Index() {
 		return () => {
 			(window as any).__setMainTab = undefined;
 		};
-	}, []);
+	}, [handleTabChange]);
 
 	// Content mapping based on active tab
 	const renderContent = () => {
@@ -229,7 +229,8 @@ function DailyLogForm() {
 			if (authError) {
 				setSaveMessage(authError);
 			} else {
-				const errorMessage = error instanceof Error ? error.message : "Unknown error";
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
 				setSaveMessage(`Error saving entry: ${errorMessage}`);
 			}
 			setTimeout(() => setSaveMessage(""), 5000);

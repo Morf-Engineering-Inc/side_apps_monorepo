@@ -8,74 +8,174 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as WelcomeRouteImport } from './routes/welcome'
-import { Route as SuccessRouteImport } from './routes/success'
-import { Route as SelfregRouteImport } from './routes/selfreg'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as LetgodRouteImport } from './routes/letgod'
-import { Route as JwtDebugRouteImport } from './routes/jwt-debug'
-import { Route as CallbackRouteImport } from './routes/callback'
-import { Route as BecomeRouteImport } from './routes/become'
-import { Route as IndexRouteImport } from './routes/index'
+// Import Routes
 
-const WelcomeRoute = WelcomeRouteImport.update({
+import { Route as rootRoute } from './routes/__root'
+import { Route as WelcomeImport } from './routes/welcome'
+import { Route as SuccessImport } from './routes/success'
+import { Route as SelfregImport } from './routes/selfreg'
+import { Route as ProfileImport } from './routes/profile'
+import { Route as PrivacyImport } from './routes/privacy'
+import { Route as LoginImport } from './routes/login'
+import { Route as LetgodImport } from './routes/letgod'
+import { Route as JwtDebugImport } from './routes/jwt-debug'
+import { Route as CallbackImport } from './routes/callback'
+import { Route as BecomeImport } from './routes/become'
+import { Route as IndexImport } from './routes/index'
+
+// Create/Update Routes
+
+const WelcomeRoute = WelcomeImport.update({
   id: '/welcome',
   path: '/welcome',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const SuccessRoute = SuccessRouteImport.update({
+
+const SuccessRoute = SuccessImport.update({
   id: '/success',
   path: '/success',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const SelfregRoute = SelfregRouteImport.update({
+
+const SelfregRoute = SelfregImport.update({
   id: '/selfreg',
   path: '/selfreg',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const ProfileRoute = ProfileRouteImport.update({
+
+const ProfileRoute = ProfileImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const PrivacyRoute = PrivacyRouteImport.update({
+
+const PrivacyRoute = PrivacyImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const LoginRoute = LoginRouteImport.update({
+
+const LoginRoute = LoginImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const LetgodRoute = LetgodRouteImport.update({
+
+const LetgodRoute = LetgodImport.update({
   id: '/letgod',
   path: '/letgod',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const JwtDebugRoute = JwtDebugRouteImport.update({
+
+const JwtDebugRoute = JwtDebugImport.update({
   id: '/jwt-debug',
   path: '/jwt-debug',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const CallbackRoute = CallbackRouteImport.update({
+
+const CallbackRoute = CallbackImport.update({
   id: '/callback',
   path: '/callback',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const BecomeRoute = BecomeRouteImport.update({
+
+const BecomeRoute = BecomeImport.update({
   id: '/become',
   path: '/become',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+
+const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => rootRoute,
 } as any)
+
+// Populate the FileRoutesByPath interface
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/become': {
+      id: '/become'
+      path: '/become'
+      fullPath: '/become'
+      preLoaderRoute: typeof BecomeImport
+      parentRoute: typeof rootRoute
+    }
+    '/callback': {
+      id: '/callback'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackImport
+      parentRoute: typeof rootRoute
+    }
+    '/jwt-debug': {
+      id: '/jwt-debug'
+      path: '/jwt-debug'
+      fullPath: '/jwt-debug'
+      preLoaderRoute: typeof JwtDebugImport
+      parentRoute: typeof rootRoute
+    }
+    '/letgod': {
+      id: '/letgod'
+      path: '/letgod'
+      fullPath: '/letgod'
+      preLoaderRoute: typeof LetgodImport
+      parentRoute: typeof rootRoute
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyImport
+      parentRoute: typeof rootRoute
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileImport
+      parentRoute: typeof rootRoute
+    }
+    '/selfreg': {
+      id: '/selfreg'
+      path: '/selfreg'
+      fullPath: '/selfreg'
+      preLoaderRoute: typeof SelfregImport
+      parentRoute: typeof rootRoute
+    }
+    '/success': {
+      id: '/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof SuccessImport
+      parentRoute: typeof rootRoute
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeImport
+      parentRoute: typeof rootRoute
+    }
+  }
+}
+
+// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -90,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/success': typeof SuccessRoute
   '/welcome': typeof WelcomeRoute
 }
+
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/become': typeof BecomeRoute
@@ -103,8 +204,9 @@ export interface FileRoutesByTo {
   '/success': typeof SuccessRoute
   '/welcome': typeof WelcomeRoute
 }
+
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
+  __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/become': typeof BecomeRoute
   '/callback': typeof CallbackRoute
@@ -117,6 +219,7 @@ export interface FileRoutesById {
   '/success': typeof SuccessRoute
   '/welcome': typeof WelcomeRoute
 }
+
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -159,6 +262,7 @@ export interface FileRouteTypes {
     | '/welcome'
   fileRoutesById: FileRoutesById
 }
+
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BecomeRoute: typeof BecomeRoute
@@ -171,88 +275,6 @@ export interface RootRouteChildren {
   SelfregRoute: typeof SelfregRoute
   SuccessRoute: typeof SuccessRoute
   WelcomeRoute: typeof WelcomeRoute
-}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/welcome': {
-      id: '/welcome'
-      path: '/welcome'
-      fullPath: '/welcome'
-      preLoaderRoute: typeof WelcomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/success': {
-      id: '/success'
-      path: '/success'
-      fullPath: '/success'
-      preLoaderRoute: typeof SuccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/selfreg': {
-      id: '/selfreg'
-      path: '/selfreg'
-      fullPath: '/selfreg'
-      preLoaderRoute: typeof SelfregRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/letgod': {
-      id: '/letgod'
-      path: '/letgod'
-      fullPath: '/letgod'
-      preLoaderRoute: typeof LetgodRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jwt-debug': {
-      id: '/jwt-debug'
-      path: '/jwt-debug'
-      fullPath: '/jwt-debug'
-      preLoaderRoute: typeof JwtDebugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/callback': {
-      id: '/callback'
-      path: '/callback'
-      fullPath: '/callback'
-      preLoaderRoute: typeof CallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/become': {
-      id: '/become'
-      path: '/become'
-      fullPath: '/become'
-      preLoaderRoute: typeof BecomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -268,6 +290,63 @@ const rootRouteChildren: RootRouteChildren = {
   SuccessRoute: SuccessRoute,
   WelcomeRoute: WelcomeRoute,
 }
-export const routeTree = rootRouteImport
+
+export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+/* ROUTE_MANIFEST_START
+{
+  "routes": {
+    "__root__": {
+      "filePath": "__root.tsx",
+      "children": [
+        "/",
+        "/become",
+        "/callback",
+        "/jwt-debug",
+        "/letgod",
+        "/login",
+        "/privacy",
+        "/profile",
+        "/selfreg",
+        "/success",
+        "/welcome"
+      ]
+    },
+    "/": {
+      "filePath": "index.tsx"
+    },
+    "/become": {
+      "filePath": "become.tsx"
+    },
+    "/callback": {
+      "filePath": "callback.tsx"
+    },
+    "/jwt-debug": {
+      "filePath": "jwt-debug.tsx"
+    },
+    "/letgod": {
+      "filePath": "letgod.tsx"
+    },
+    "/login": {
+      "filePath": "login.tsx"
+    },
+    "/privacy": {
+      "filePath": "privacy.tsx"
+    },
+    "/profile": {
+      "filePath": "profile.tsx"
+    },
+    "/selfreg": {
+      "filePath": "selfreg.tsx"
+    },
+    "/success": {
+      "filePath": "success.tsx"
+    },
+    "/welcome": {
+      "filePath": "welcome.tsx"
+    }
+  }
+}
+ROUTE_MANIFEST_END */

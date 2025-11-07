@@ -1,10 +1,10 @@
 import SideNav from "@/components/SideNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { Outlet } from "@tanstack/react-router";
+import { Menu, X } from "lucide-react";
 import React, { useState } from "react";
 import { TutorialModal } from "./TutorialModal";
 import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
 
 export function MainLayout() {
 	const { user, logout } = useAuth();
@@ -17,6 +17,7 @@ export function MainLayout() {
 					<header className="flex justify-between items-center py-4 mb-6">
 						<div className="flex items-center gap-3">
 							<button
+								type="button"
 								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 								className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
 								aria-label="Toggle menu"
@@ -48,7 +49,7 @@ export function MainLayout() {
 					</header>
 					<div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 						<div className="md:col-span-3">
-							<SideNav 
+							<SideNav
 								mobileMenuOpen={mobileMenuOpen}
 								onMobileMenuClose={() => setMobileMenuOpen(false)}
 							/>

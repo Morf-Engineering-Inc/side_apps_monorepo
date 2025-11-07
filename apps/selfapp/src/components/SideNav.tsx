@@ -73,7 +73,12 @@ const items: {
 	},
 ];
 
-export default function SideNav({ active, onChange, mobileMenuOpen, onMobileMenuClose }: Props) {
+export default function SideNav({
+	active,
+	onChange,
+	mobileMenuOpen,
+	onMobileMenuClose,
+}: Props) {
 	const location = useLocation();
 	const navigate = useNavigate();
 
@@ -129,6 +134,14 @@ export default function SideNav({ active, onChange, mobileMenuOpen, onMobileMenu
 				<div
 					className="fixed inset-0 bg-black/50 z-40 md:hidden"
 					onClick={onMobileMenuClose}
+					onKeyDown={(e) => {
+						if (e.key === "Escape" && onMobileMenuClose) {
+							onMobileMenuClose();
+						}
+					}}
+					role="button"
+					tabIndex={0}
+					aria-label="Close menu"
 				/>
 			)}
 
@@ -160,6 +173,7 @@ export default function SideNav({ active, onChange, mobileMenuOpen, onMobileMenu
 							return (
 								<li key={it.id}>
 									<button
+										type="button"
 										onClick={() => handleClick(it)}
 										className={`flex items-center w-full gap-3 px-3 py-2 rounded-md text-left transition-colors text-sm font-medium ${
 											isActive

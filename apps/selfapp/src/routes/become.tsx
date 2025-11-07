@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
 import * as apiClient from "@/lib/api-client";
 import type { Entry } from "@/lib/api-client";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { createFileRoute } from "@tanstack/react-router";
 import {
 	AlertCircle,
@@ -20,7 +21,6 @@ import {
 	TrendingUp,
 } from "lucide-react";
 import type React from "react";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/become")({
@@ -33,7 +33,8 @@ function RouteComponent() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
-	const [existingEntryForDate, setExistingEntryForDate] = useState<Entry | null>(null);
+	const [existingEntryForDate, setExistingEntryForDate] =
+		useState<Entry | null>(null);
 	const [currentEntry, setCurrentEntry] = useState<
 		Omit<Entry, "userId" | "entryId" | "createdAt" | "updatedAt">
 	>({
@@ -73,7 +74,8 @@ function RouteComponent() {
 				if (authError) {
 					setError(authError);
 				} else {
-					const errorMessage = err instanceof Error ? err.message : "Failed to load entries";
+					const errorMessage =
+						err instanceof Error ? err.message : "Failed to load entries";
 					setError(errorMessage);
 				}
 			} finally {
@@ -113,7 +115,7 @@ function RouteComponent() {
 			let savedEntry: Entry;
 
 			// Check if we're updating an existing entry for this date
-			if (existingEntryForDate && existingEntryForDate.entryId) {
+			if (existingEntryForDate?.entryId) {
 				savedEntry = await apiClient.updateEntry(
 					existingEntryForDate.entryId,
 					currentEntry,
@@ -148,7 +150,8 @@ function RouteComponent() {
 			if (authError) {
 				setError(authError);
 			} else {
-				const errorMessage = err instanceof Error ? err.message : "Failed to save entry";
+				const errorMessage =
+					err instanceof Error ? err.message : "Failed to save entry";
 				setError(errorMessage);
 			}
 		} finally {
