@@ -343,8 +343,8 @@ jobs:
             cognitoUserPoolId: '${{ steps.tf_outputs.outputs.cognito_user_pool_id }}',
             cognitoClientId: '${{ steps.tf_outputs.outputs.cognito_client_id }}',
             cognitoDomain: '${{ steps.tf_outputs.outputs.cognito_domain }}',
-            redirectSignIn: '${{ steps.tf_outputs.outputs.cloudfront_url }}/callback',
-            redirectSignOut: '${{ steps.tf_outputs.outputs.cloudfront_url }}/',
+            redirectSignIn: '${{ steps.tf_outputs.outputs.custom_domain_url }}/callback',
+            redirectSignOut: '${{ steps.tf_outputs.outputs.custom_domain_url }}/',
             responseType: 'code',
             scopes: ['openid', 'email', 'profile']
           };
