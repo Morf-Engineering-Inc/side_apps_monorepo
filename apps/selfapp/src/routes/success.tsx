@@ -16,6 +16,7 @@ import {
 	listSuccessDefinitions,
 	updateSuccessDefinition,
 } from "@/lib/api-client-entities";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -35,7 +36,6 @@ import {
 	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/success")({
 	component: RouteComponent,
@@ -94,7 +94,8 @@ function RouteComponent() {
 				if (authError) {
 					setSaveMessage(authError);
 				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					const errorMessage =
+						error instanceof Error ? error.message : "Unknown error";
 					setSaveMessage(`Failed to load entries: ${errorMessage}`);
 				}
 			} finally {
@@ -191,12 +192,13 @@ function RouteComponent() {
 		} catch (error) {
 			console.error("Failed to save success definition:", error);
 			const authError = getAuthErrorMessage(error);
-				if (authError) {
-					setSaveMessage(authError);
-				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
-					setSaveMessage(`Failed to save: ${errorMessage}`);
-				}
+			if (authError) {
+				setSaveMessage(authError);
+			} else {
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
+				setSaveMessage(`Failed to save: ${errorMessage}`);
+			}
 			setTimeout(() => setSaveMessage(""), 5000);
 		} finally {
 			setSubmitting(false);

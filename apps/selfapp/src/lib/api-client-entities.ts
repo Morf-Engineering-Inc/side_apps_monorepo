@@ -3,8 +3,8 @@
  * Provides generic CRUD operations for all entity types
  */
 
-import { getAuthToken } from "./auth-integration";
 import { TokenExpiredError } from "./auth-errors";
+import { getAuthToken } from "./auth-integration";
 
 // Get API URL from config or environment
 const getApiUrl = (): string => {
@@ -92,6 +92,8 @@ export interface LetGodEntry extends BaseEntity {
 export interface SelfRegEntry extends BaseEntity {
 	createdAt: string;
 	trigger: string;
+	emotionFamily?: string | null;
+	emotionTerm?: string | null;
 	distraction: string | null;
 	choice: string;
 	identity: "inward" | "outward";
@@ -144,7 +146,7 @@ async function apiRequest<T>(
 		if (response.status === 401) {
 			throw new TokenExpiredError();
 		}
-		
+
 		const errorData = await response.json().catch(() => ({}));
 		throw new Error(
 			errorData.message || errorData.error || `HTTP ${response.status}`,

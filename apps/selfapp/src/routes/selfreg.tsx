@@ -1,3 +1,9 @@
+import {
+	EmotionFamilyPicker,
+	EmotionTermPicker,
+	ImpulsePicker,
+	TriggerPicker,
+} from "@/components/SelfRegPickers";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -6,9 +12,9 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import triggerData from "@/data/trigger_taxonomy.json";
 import {
 	type SelfRegEntry,
 	createSelfRegEntry,
@@ -22,6 +28,23 @@ import { Check, Loader2, Sparkles, Trash2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 
+// Helper function to get trigger label from ID
+function getTriggerLabel(triggerId: string): string {
+	for (const category of triggerData.trigger_taxonomy) {
+		const trigger = category.triggers.find((t) => t.id === triggerId);
+		if (trigger) {
+			return trigger.label;
+		}
+	}
+	return triggerId;
+}
+
+// Helper function to get impulse label from ID
+function getImpulseLabel(impulseId: string): string {
+	const impulse = triggerData.impulse_taxonomy.find((i) => i.id === impulseId);
+	return impulse ? impulse.label : impulseId;
+}
+
 export const Route = createFileRoute("/selfreg")({
 	component: RouteComponent,
 });
@@ -32,6 +55,8 @@ function RouteComponent() {
 	const [submitting, setSubmitting] = useState(false);
 
 	const [trigger, setTrigger] = useState("");
+	const [emotionFamily, setEmotionFamily] = useState("");
+	const [emotionTerm, setEmotionTerm] = useState("");
 	const [distraction, setDistraction] = useState("");
 	const [choice, setChoice] = useState("");
 	const [identity, setIdentity] = useState<"inward" | "outward">("inward");
@@ -56,7 +81,8 @@ function RouteComponent() {
 				if (authError) {
 					setSaveMessage(authError);
 				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					const errorMessage =
+						error instanceof Error ? error.message : "Unknown error";
 					setSaveMessage(`Failed to load entries: ${errorMessage}`);
 				}
 			} finally {
@@ -68,6 +94,8 @@ function RouteComponent() {
 
 	const resetForm = () => {
 		setTrigger("");
+		setEmotionFamily("");
+		setEmotionTerm("");
 		setDistraction("");
 		setChoice("");
 		setIdentity("inward");
@@ -85,6 +113,8 @@ function RouteComponent() {
 		try {
 			const entry = await createSelfRegEntry({
 				trigger: trigger.trim(),
+				emotionFamily: emotionFamily.trim() || null,
+				emotionTerm: emotionTerm.trim() || null,
 				distraction: distraction.trim() || null,
 				choice: choice.trim(),
 				identity,
@@ -100,7 +130,8 @@ function RouteComponent() {
 			if (authError) {
 				setSaveMessage(authError);
 			} else {
-				const errorMessage = error instanceof Error ? error.message : "Unknown error";
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
 				setSaveMessage(`Failed to save: ${errorMessage}`);
 			}
 			setTimeout(() => setSaveMessage(""), 5000);
@@ -124,7 +155,8 @@ function RouteComponent() {
 			if (authError) {
 				setSaveMessage(authError);
 			} else {
-				const errorMessage = error instanceof Error ? error.message : "Unknown error";
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
 				setSaveMessage(`Failed to delete: ${errorMessage}`);
 			}
 			setTimeout(() => setSaveMessage(""), 5000);
@@ -191,25 +223,36 @@ function RouteComponent() {
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSubmit} className="space-y-4">
-						<div>
-							<Label>What set this off?</Label>
-							<Input
-								placeholder="e.g., stress, boredom, hunger, phone"
-								value={trigger}
-								onChange={(e) => setTrigger(e.target.value)}
-								disabled={submitting}
-							/>
-						</div>
+						<TriggerPicker
+							value={trigger}
+							onChange={setTrigger}
+							disabled={submitting}
+						/>
 
-						<div>
-							<Label>What did you WANT to do?</Label>
-							<Input
-								placeholder="scroll, sugar, withdraw, lash out"
-								value={distraction}
-								onChange={(e) => setDistraction(e.target.value)}
+						<EmotionFamilyPicker
+							value={emotionFamily}
+							onChange={(value) => {
+								setEmotionFamily(value);
+								// Reset emotion term when family changes
+								setEmotionTerm("");
+							}}
+							disabled={submitting}
+						/>
+
+						{emotionFamily && (
+							<EmotionTermPicker
+								emotionFamily={emotionFamily}
+								value={emotionTerm}
+								onChange={setEmotionTerm}
 								disabled={submitting}
 							/>
-						</div>
+						)}
+
+						<ImpulsePicker
+							value={distraction}
+							onChange={setDistraction}
+							disabled={submitting}
+						/>
 
 						<div>
 							<Label>What did you CHOOSE instead?</Label>
@@ -307,11 +350,17 @@ function RouteComponent() {
 										</div>
 										<div className="text-right flex-shrink-0">
 											<p className="text-xs app-text-subtle">
-												Trigger: {e.trigger}
+												Trigger: {getTriggerLabel(e.trigger)}
 											</p>
+											{e.emotionFamily && (
+												<p className="text-xs app-text-subtle">
+													Emotion: {e.emotionFamily}
+													{e.emotionTerm ? ` (${e.emotionTerm})` : ""}
+												</p>
+											)}
 											{e.distraction && (
 												<p className="text-xs app-text-subtle">
-													Impulse: {e.distraction}
+													Impulse: {getImpulseLabel(e.distraction)}
 												</p>
 											)}
 											<p className="text-xs font-medium">

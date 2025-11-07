@@ -192,8 +192,6 @@ function ProfilePage() {
 									)}
 								</div>
 							</div>
-
-
 						</div>
 					</CardContent>
 				</Card>

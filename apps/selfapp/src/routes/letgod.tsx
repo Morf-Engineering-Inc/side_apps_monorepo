@@ -71,7 +71,8 @@ function RouteComponent() {
 				if (authError) {
 					setSaveMessage(authError);
 				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					const errorMessage =
+						error instanceof Error ? error.message : "Unknown error";
 					setSaveMessage(`Failed to load entries: ${errorMessage}`);
 				}
 			} finally {
@@ -121,12 +122,13 @@ function RouteComponent() {
 		} catch (error) {
 			console.error("Failed to save entry:", error);
 			const authError = getAuthErrorMessage(error);
-				if (authError) {
-					setSaveMessage(authError);
-				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
-					setSaveMessage(`Failed to save: ${errorMessage}`);
-				}
+			if (authError) {
+				setSaveMessage(authError);
+			} else {
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
+				setSaveMessage(`Failed to save: ${errorMessage}`);
+			}
 			setTimeout(() => setSaveMessage(""), 5000);
 		} finally {
 			setSubmitting(false);
@@ -145,12 +147,13 @@ function RouteComponent() {
 		} catch (error) {
 			console.error("Failed to delete entry:", error);
 			const authError = getAuthErrorMessage(error);
-				if (authError) {
-					setSaveMessage(authError);
-				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
-					setSaveMessage(`Failed to delete: ${errorMessage}`);
-				}
+			if (authError) {
+				setSaveMessage(authError);
+			} else {
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
+				setSaveMessage(`Failed to delete: ${errorMessage}`);
+			}
 			setTimeout(() => setSaveMessage(""), 5000);
 		}
 	};

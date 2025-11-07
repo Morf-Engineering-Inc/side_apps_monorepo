@@ -47,9 +47,10 @@ function PrivacyPolicyPage() {
 								1.2 Performance Tracking Data
 							</h3>
 							<p className="app-text-subtle">
-								We collect the information you provide when using our performance
-								tracking features, including daily goals, execution notes,
-								performance ratings, time tracking data, and reflection entries.
+								We collect the information you provide when using our
+								performance tracking features, including daily goals, execution
+								notes, performance ratings, time tracking data, and reflection
+								entries.
 							</p>
 						</div>
 						<div>
@@ -70,9 +71,7 @@ function PrivacyPolicyPage() {
 						<CardTitle>2. How We Use Your Information</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-4">
-						<p className="app-text-subtle">
-							We use your information to:
-						</p>
+						<p className="app-text-subtle">We use your information to:</p>
 						<ul className="list-disc list-inside space-y-2 app-text-subtle ml-4">
 							<li>Provide and maintain our service</li>
 							<li>Authenticate and secure your account</li>
@@ -81,7 +80,9 @@ function PrivacyPolicyPage() {
 								Generate insights and analytics based on your logged activities
 							</li>
 							<li>Improve and optimize our application</li>
-							<li>Communicate with you about updates or important information</li>
+							<li>
+								Communicate with you about updates or important information
+							</li>
 						</ul>
 					</CardContent>
 				</Card>
@@ -130,9 +131,7 @@ function PrivacyPolicyPage() {
 							circumstances:
 						</p>
 						<ul className="list-disc list-inside space-y-2 app-text-subtle ml-4">
-							<li>
-								With your explicit consent for specific purposes
-							</li>
+							<li>With your explicit consent for specific purposes</li>
 							<li>
 								To comply with legal obligations, court orders, or legal
 								processes
