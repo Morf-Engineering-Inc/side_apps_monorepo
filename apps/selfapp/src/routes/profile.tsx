@@ -11,14 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-	Calendar,
-	Key,
-	Lock,
-	Mail,
-	Shield,
-	User as UserIcon,
-} from "lucide-react";
+import { Key, Lock, Mail, Shield, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/profile")({
@@ -33,9 +26,6 @@ interface TokenInfo {
 	family_name?: string;
 	preferred_username?: string;
 	email_verified?: boolean;
-	exp?: number;
-	iat?: number;
-	iss?: string;
 	[key: string]: unknown;
 }
 
@@ -69,16 +59,6 @@ function ProfilePage() {
 			}
 		}
 	}, []);
-
-	const formatDate = (timestamp?: number) => {
-		if (!timestamp) return "N/A";
-		return new Date(timestamp * 1000).toLocaleString();
-	};
-
-	const isTokenExpired = (exp?: number) => {
-		if (!exp) return false;
-		return Date.now() / 1000 > exp;
-	};
 
 	const handleChangePassword = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -199,64 +179,6 @@ function ProfilePage() {
 				</CardContent>
 			</Card>
 
-			{tokenInfo && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Token Information</CardTitle>
-						<CardDescription>
-							Details about your authentication token
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<div className="grid md:grid-cols-2 gap-4">
-							<div className="flex items-start gap-3">
-								<div className="p-2 bg-app-surface-alt rounded-lg">
-									<Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-								</div>
-								<div>
-									<p className="text-sm font-medium app-text-subtle">
-										Issued At
-									</p>
-									<p className="text-sm app-text-subtle">
-										{formatDate(tokenInfo.iat)}
-									</p>
-								</div>
-							</div>
-
-							<div className="flex items-start gap-3">
-								<div className="p-2 bg-app-surface-alt rounded-lg">
-									<Calendar className="h-5 w-5 text-red-600 dark:text-red-400" />
-								</div>
-								<div>
-									<p className="text-sm font-medium app-text-subtle">
-										Expires At
-									</p>
-									<p className="text-sm app-text-subtle">
-										{formatDate(tokenInfo.exp)}
-									</p>
-									{isTokenExpired(tokenInfo.exp) && (
-										<p className="text-xs text-red-600 dark:text-red-400 mt-1">
-											⚠ Token expired
-										</p>
-									)}
-								</div>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			)}
-
-			{!tokenInfo && (
-				<Card>
-					<CardContent className="p-8 text-center">
-						<p className="app-text-muted">
-							Using local authentication mode. Sign in with Cognito to see
-							detailed token information.
-						</p>
-					</CardContent>
-				</Card>
-			)}
-
 			<Card>
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
@@ -297,7 +219,8 @@ function ProfilePage() {
 									required
 								/>
 								<p className="text-xs app-text-muted">
-									At least 8 characters (additional complexity requirements may apply)
+									At least 8 characters (additional complexity requirements may
+									apply)
 								</p>
 							</div>
 							<div className="space-y-2">
