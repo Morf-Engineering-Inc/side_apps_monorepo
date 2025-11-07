@@ -82,7 +82,6 @@ function RouteComponent() {
 		setSubmitting(true);
 		try {
 			const entry = await createSelfRegEntry({
-				createdAt: new Date().toISOString(),
 				trigger: trigger.trim(),
 				distraction: distraction.trim() || null,
 				choice: choice.trim(),
