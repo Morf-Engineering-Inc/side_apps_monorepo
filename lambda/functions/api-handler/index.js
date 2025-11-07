@@ -551,7 +551,14 @@ exports.handler = async (event) => {
   console.log('API Handler invoked:', JSON.stringify(event, null, 2));
 
   try {
-    const { httpMethod, path, body, queryStringParameters, headers } = event;
+    let { httpMethod, path, body, queryStringParameters, headers } = event;
+    
+    // Strip stage prefix from path (e.g., /test/api/... -> /api/...)
+    // API Gateway includes the stage name in the path, but we want to handle paths without it
+    const stageName = process.env.ENVIRONMENT || 'test';
+    if (path.startsWith(`/${stageName}/`)) {
+      path = path.substring(stageName.length + 1);
+    }
 
     // Handle CORS preflight
     if (httpMethod === 'OPTIONS') {
