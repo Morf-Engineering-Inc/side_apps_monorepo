@@ -275,7 +275,7 @@ function LoginPage() {
 									<button
 										type="button"
 										onClick={() => navigate({ to: "/forgot-password" })}
-										className="w-full text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2"
+										className="w-full text-sm app-text-muted hover:underline mt-2"
 									>
 										Forgot Password?
 									</button>
