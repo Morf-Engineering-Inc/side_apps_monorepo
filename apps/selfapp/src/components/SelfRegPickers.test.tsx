@@ -33,7 +33,9 @@ describe("SelfRegPickers", () => {
 		it("should render impulse picker", () => {
 			const onChange = vi.fn();
 			render(<ImpulsePicker value="" onChange={onChange} disabled={false} />);
-			expect(screen.getByText("What did you WANT to do next?")).toBeInTheDocument();
+			expect(
+				screen.getByText("What did you WANT to do next?"),
+			).toBeInTheDocument();
 		});
 	});
 
