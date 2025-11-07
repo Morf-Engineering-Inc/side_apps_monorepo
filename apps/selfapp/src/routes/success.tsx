@@ -10,6 +10,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	createSuccessDefinition,
+	listSuccessDefinitions,
+	updateSuccessDefinition,
+	type SuccessDefinition,
+} from "@/lib/api-client-entities";
 import { createFileRoute } from "@tanstack/react-router";
 import {
 	BookOpen,
@@ -18,6 +24,7 @@ import {
 	Compass,
 	Crown,
 	Heart,
+	Loader2,
 	Plus,
 	Shield,
 	Sparkles,
@@ -40,24 +47,11 @@ interface GuidingPrinciple {
 	dateCreated: string;
 }
 
-interface SuccessDefinition {
-	id: number;
-	vision: string;
-	divineCapacities: string[];
-	selfMasteryGoals: string[];
-	principles: GuidingPrinciple[];
-	temporalGoals: string;
-	spiritualGoals: string;
-	characterGoals: string;
-	intelligenceGoals: string;
-	dateCreated: string;
-	lastUpdated: string;
-}
-
-const STORAGE_KEY = "success:definition";
-
 function RouteComponent() {
 	const [definition, setDefinition] = useState<SuccessDefinition | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [submitting, setSubmitting] = useState(false);
+
 	const [vision, setVision] = useState("");
 	const [divineCapacities, setDivineCapacities] = useState<string[]>([""]);
 	const [selfMasteryGoals, setSelfMasteryGoals] = useState<string[]>([""]);
@@ -73,24 +67,33 @@ function RouteComponent() {
 	const [newScripture, setNewScripture] = useState("");
 	const [newCommitment, setNewCommitment] = useState("");
 
+	// Load success definition from API
 	useEffect(() => {
-		const saved = localStorage.getItem(STORAGE_KEY);
-		if (saved) {
+		const loadDefinition = async () => {
 			try {
-				const parsed = JSON.parse(saved);
-				setDefinition(parsed);
-				setVision(parsed.vision || "");
-				setDivineCapacities(parsed.divineCapacities || [""]);
-				setSelfMasteryGoals(parsed.selfMasteryGoals || [""]);
-				setPrinciples(parsed.principles || []);
-				setTemporalGoals(parsed.temporalGoals || "");
-				setSpiritualGoals(parsed.spiritualGoals || "");
-				setCharacterGoals(parsed.characterGoals || "");
-				setIntelligenceGoals(parsed.intelligenceGoals || "");
-			} catch (e) {
-				console.error("Failed to parse success definition", e);
+				setLoading(true);
+				const definitions = await listSuccessDefinitions();
+				// Get the most recent one (should only be one per user)
+				if (definitions.length > 0) {
+					const latest = definitions[0];
+					setDefinition(latest);
+					setVision(latest.vision || "");
+					setDivineCapacities(latest.divineCapacities || [""]);
+					setSelfMasteryGoals(latest.selfMasteryGoals || [""]);
+					setPrinciples(latest.principles || []);
+					setTemporalGoals(latest.temporalGoals || "");
+					setSpiritualGoals(latest.spiritualGoals || "");
+					setCharacterGoals(latest.characterGoals || "");
+					setIntelligenceGoals(latest.intelligenceGoals || "");
+				}
+			} catch (error) {
+				console.error("Failed to load success definition:", error);
+				setSaveMessage("Failed to load data. Please refresh.");
+			} finally {
+				setLoading(false);
 			}
-		}
+		};
+		loadDefinition();
 	}, []);
 
 	const addDivineCapacity = () => {
@@ -148,9 +151,8 @@ function RouteComponent() {
 		setPrinciples(principles.filter((p) => p.id !== id));
 	};
 
-	const saveDefinition = () => {
-		const successDef: SuccessDefinition = {
-			id: definition?.id || Date.now(),
+	const saveDefinition = async () => {
+		const successDef = {
 			vision: vision.trim(),
 			divineCapacities: divineCapacities.filter(Boolean),
 			selfMasteryGoals: selfMasteryGoals.filter(Boolean),
@@ -159,15 +161,44 @@ function RouteComponent() {
 			spiritualGoals: spiritualGoals.trim(),
 			characterGoals: characterGoals.trim(),
 			intelligenceGoals: intelligenceGoals.trim(),
-			dateCreated: definition?.dateCreated || new Date().toISOString(),
-			lastUpdated: new Date().toISOString(),
 		};
 
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(successDef));
-		setDefinition(successDef);
-		setSaveMessage("Success definition saved! 🌟");
-		setTimeout(() => setSaveMessage(""), 3000);
+		setSubmitting(true);
+		try {
+			let savedDef: SuccessDefinition;
+			if (definition?.entryId) {
+				// Update existing definition
+				savedDef = await updateSuccessDefinition(
+					definition.entryId,
+					successDef,
+				);
+			} else {
+				// Create new definition
+				savedDef = await createSuccessDefinition(successDef);
+			}
+
+			setDefinition(savedDef);
+			setSaveMessage("Success definition saved! 🌟");
+			setTimeout(() => setSaveMessage(""), 3000);
+		} catch (error) {
+			console.error("Failed to save success definition:", error);
+			setSaveMessage("Failed to save. Please try again.");
+			setTimeout(() => setSaveMessage(""), 3000);
+		} finally {
+			setSubmitting(false);
+		}
 	};
+
+	if (loading) {
+		return (
+			<Card>
+				<CardContent className="p-12 text-center">
+					<Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+					<p className="app-text-subtle">Loading your success definition...</p>
+				</CardContent>
+			</Card>
+		);
+	}
 
 	return (
 		<div className="space-y-6 max-w-5xl mx-auto">
@@ -523,19 +554,35 @@ function RouteComponent() {
 			<Card>
 				<CardContent className="pt-6">
 					<div className="flex flex-col gap-2">
-						<Button onClick={saveDefinition} size="lg" className="w-full">
-							<CheckCircle className="w-5 h-5 mr-2" />
-							Save Your Success Definition
+						<Button
+							onClick={saveDefinition}
+							size="lg"
+							className="w-full"
+							disabled={submitting}
+						>
+							{submitting ? (
+								<>
+									<Loader2 className="w-5 h-5 mr-2 animate-spin" />
+									Saving...
+								</>
+							) : (
+								<>
+									<CheckCircle className="w-5 h-5 mr-2" />
+									Save Your Success Definition
+								</>
+							)}
 						</Button>
 						{saveMessage && (
-							<p className="text-sm text-center app-text-strong">
+							<p
+								className={`text-sm text-center ${saveMessage.includes("Failed") ? "text-red-600" : "app-text-strong"}`}
+							>
 								{saveMessage}
 							</p>
 						)}
-						{definition && (
+						{definition && definition.updatedAt && (
 							<p className="text-xs text-center app-text-muted">
 								Last updated:{" "}
-								{new Date(definition.lastUpdated).toLocaleDateString()}
+								{new Date(definition.updatedAt).toLocaleDateString()}
 							</p>
 						)}
 					</div>
