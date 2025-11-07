@@ -424,12 +424,6 @@ async function signUpWithPassword(
 		}
 		const region = parts[0];
 
-		// Validate region format (basic sanity check)
-		if (!/^[a-z]{2}-[a-z]+-\d+$/.test(region)) {
-			console.error("Invalid AWS region format:", region);
-			return false;
-		}
-
 		const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
 
 		const requestBody = {
