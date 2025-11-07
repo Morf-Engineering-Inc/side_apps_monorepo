@@ -60,15 +60,15 @@ output "nameserver_instructions" {
     
     🌐 DNS SETUP REQUIRED:
     
-    1. Add ACM Validation Record to Namecheap:
+    1. Add ACM Validation Record(s) to Namecheap:
        ${join("\n       ", [for record in aws_acm_certificate.domain.domain_validation_options :
-"CNAME: ${record.resource_record_name} -> ${record.resource_record_value}"])}
+"Type: ${record.resource_record_type} | Host: ${record.resource_record_name} | Value: ${record.resource_record_value}"])}
     
     2. Add CloudFront CNAME Records to Namecheap:
-       CNAME: @ -> ${aws_cloudfront_distribution.frontend.domain_name}
-       CNAME: www -> ${aws_cloudfront_distribution.frontend.domain_name}
+       Type: CNAME | Host: @ | Value: ${aws_cloudfront_distribution.frontend.domain_name}
+       Type: CNAME | Host: www | Value: ${aws_cloudfront_distribution.frontend.domain_name}
     
-    3. Wait 5-10 minutes for DNS propagation
+    3. Wait 5-10 minutes for DNS propagation and certificate validation
     
   EOT
 }
