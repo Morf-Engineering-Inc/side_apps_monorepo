@@ -124,6 +124,9 @@ resource "aws_cloudfront_distribution" "frontend" {
 resource "aws_cognito_user_pool" "main" {
   name = "${var.app_name}-users"
 
+  # Use email as username to enforce email uniqueness
+  username_attributes = ["email"]
+
   password_policy {
     minimum_length    = 8
     require_lowercase = true

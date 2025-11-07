@@ -11,6 +11,25 @@ interface AuthState {
 	parentOrigin: string | null;
 }
 
+// PKCE Helper Functions
+async function generateCodeVerifier(): Promise<string> {
+	const array = new Uint8Array(32);
+	crypto.getRandomValues(array);
+	return base64UrlEncode(array);
+}
+
+function base64UrlEncode(buffer: Uint8Array): string {
+	const base64 = btoa(String.fromCharCode(...buffer));
+	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(verifier);
+	const hash = await crypto.subtle.digest("SHA-256", data);
+	return base64UrlEncode(new Uint8Array(hash));
+}
+
 class AuthIntegration {
 	private state: AuthState = {
 		token: null,
@@ -302,10 +321,10 @@ export function isCognitoConfigured(): boolean {
 	}
 }
 
-export function buildCognitoAuthorizeUrl(opts?: {
+export async function buildCognitoAuthorizeUrl(opts?: {
 	scope?: string;
 	responseType?: string;
-}) {
+}): Promise<string | null> {
 	const cfg =
 		(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
 	const clientId = cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
@@ -332,10 +351,15 @@ export function buildCognitoAuthorizeUrl(opts?: {
 	const scope = opts?.scope || cfg.scopes?.join(" ") || "openid profile email";
 	const state = Math.random().toString(36).slice(2);
 
-	// Store state for validation on callback
+	// Generate PKCE parameters
+	const codeVerifier = await generateCodeVerifier();
+	const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+	// Store state and code verifier for validation on callback
 	try {
 		if (typeof window !== "undefined" && window.sessionStorage) {
 			window.sessionStorage.setItem("cognito_auth_state", state);
+			window.sessionStorage.setItem("cognito_code_verifier", codeVerifier);
 		}
 	} catch (e) {
 		// ignore
@@ -347,12 +371,15 @@ export function buildCognitoAuthorizeUrl(opts?: {
 	url.searchParams.set("scope", scope);
 	url.searchParams.set("redirect_uri", redirectUri);
 	url.searchParams.set("state", state);
+	// Add PKCE parameters
+	url.searchParams.set("code_challenge", codeChallenge);
+	url.searchParams.set("code_challenge_method", "S256");
 	console.log("Cognito authorize URL:", url.toString());
 	return url.toString();
 }
 
-export function loginWithCognito() {
-	const url = buildCognitoAuthorizeUrl();
+export async function loginWithCognito() {
+	const url = await buildCognitoAuthorizeUrl();
 	if (url) {
 		window.location.href = url;
 	} else {
@@ -378,6 +405,66 @@ function parseCodeFromUrl() {
 	return { code, state, error };
 }
 
+/**
+ * Exchange authorization code for tokens using PKCE
+ */
+async function exchangeCodeForTokens(
+	code: string,
+	codeVerifier: string,
+): Promise<{ id_token?: string; access_token?: string } | null> {
+	try {
+		const cfg =
+			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+		const clientId =
+			cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+		const domain = cfg.cognitoDomain || cfg.cognito_domain || cfg.domain;
+		const envRedirectUri = import.meta.env.VITE_COGNITO_REDIRECT_URI;
+		const redirectUri =
+			envRedirectUri ||
+			cfg.redirectSignIn ||
+			cfg.redirectUri ||
+			cfg.redirect_uri ||
+			`${window.location.origin}/callback`;
+
+		if (!domain || !clientId) {
+			console.error("Cognito not configured for token exchange");
+			return null;
+		}
+
+		const tokenEndpoint = `https://${domain}/oauth2/token`;
+
+		const body = new URLSearchParams({
+			grant_type: "authorization_code",
+			client_id: clientId,
+			code: code,
+			redirect_uri: redirectUri,
+			code_verifier: codeVerifier,
+		});
+
+		console.log("Exchanging authorization code for tokens...");
+		const response = await fetch(tokenEndpoint, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			body: body.toString(),
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			console.error("Token exchange failed:", response.status, errorText);
+			return null;
+		}
+
+		const tokens = await response.json();
+		console.log("Successfully exchanged code for tokens");
+		return tokens;
+	} catch (error) {
+		console.error("Error exchanging code for tokens:", error);
+		return null;
+	}
+}
+
 export function handleCognitoCallback(): Promise<boolean> {
 	return new Promise((resolve) => {
 		try {
@@ -393,50 +480,60 @@ export function handleCognitoCallback(): Promise<boolean> {
 
 			if (code) {
 				// Validate state if available
+				let codeVerifier: string | null = null;
 				try {
 					const savedState =
 						window.sessionStorage?.getItem("cognito_auth_state");
+					codeVerifier = window.sessionStorage?.getItem("cognito_code_verifier");
+
 					if (savedState && savedState !== state) {
 						console.error("State mismatch in OAuth callback");
 						return resolve(false);
 					}
 					window.sessionStorage?.removeItem("cognito_auth_state");
+					window.sessionStorage?.removeItem("cognito_code_verifier");
 				} catch (e) {
 					// ignore storage errors
 				}
 
-				// SECURITY NOTE: In production, authorization codes should be exchanged for tokens
-				// via a secure backend endpoint (not in the frontend). This requires:
-				// 1. A backend API endpoint that receives the code
-				// 2. The backend exchanges the code with Cognito token endpoint
-				// 3. The backend validates and returns the JWT tokens
-				//
-				// For this standalone frontend app without a backend, we're treating the code
-				// as a simple auth indicator. This is acceptable for development/testing but
-				// should be replaced with proper token exchange in production.
+				if (!codeVerifier) {
+					console.error("No code verifier found for PKCE exchange");
+					return resolve(false);
+				}
 
-				// TODO: Add environment check to ensure this only runs in development
-				// if (process.env.NODE_ENV === 'production') {
-				//   throw new Error('Direct code usage not allowed in production');
-				// }
-
+				// Exchange authorization code for tokens using PKCE
 				console.log("Received authorization code from Cognito");
-				authIntegration.setAuthTokenAsync(code as string).then(() => {
-					// Clean up URL while preserving non-OAuth query parameters
-					try {
-						const url = new URL(window.location.href);
-						// Remove OAuth-specific parameters
-						url.searchParams.delete("code");
-						url.searchParams.delete("state");
-						url.searchParams.delete("error");
-						url.searchParams.delete("error_description");
+				exchangeCodeForTokens(code, codeVerifier)
+					.then((tokens) => {
+						if (!tokens || (!tokens.id_token && !tokens.access_token)) {
+							console.error("Token exchange failed");
+							return resolve(false);
+						}
 
-						// Reconstruct URL with remaining query params
-						const newUrl = url.pathname + (url.search || "");
-						history.replaceState(null, "", newUrl);
-					} catch (e) {}
-					resolve(true);
-				});
+						// Use id_token (contains user info) or access_token as fallback
+						const token = tokens.id_token || tokens.access_token;
+						return authIntegration.setAuthTokenAsync(token as string);
+					})
+					.then(() => {
+						// Clean up URL while preserving non-OAuth query parameters
+						try {
+							const url = new URL(window.location.href);
+							// Remove OAuth-specific parameters
+							url.searchParams.delete("code");
+							url.searchParams.delete("state");
+							url.searchParams.delete("error");
+							url.searchParams.delete("error_description");
+
+							// Reconstruct URL with remaining query params
+							const newUrl = url.pathname + (url.search || "");
+							history.replaceState(null, "", newUrl);
+						} catch (e) {}
+						resolve(true);
+					})
+					.catch((error) => {
+						console.error("Error during token exchange:", error);
+						resolve(false);
+					});
 				return;
 			}
 
