@@ -35,6 +35,7 @@ import {
 	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/success")({
 	component: RouteComponent,
@@ -89,11 +90,12 @@ function RouteComponent() {
 				}
 			} catch (error) {
 				console.error("Failed to load success definition:", error);
-				const errorMessage = error instanceof Error ? error.message : "Unknown error";
-				if (errorMessage.includes("Invalid or expired token")) {
-					setSaveMessage("⚠ Session expired. Please refresh the page and log in again.");
+				const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
 				} else {
-					setSaveMessage(`Failed to load data: ${errorMessage}`);
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to load entries: ${errorMessage}`);
 				}
 			} finally {
 				setLoading(false);
@@ -188,14 +190,13 @@ function RouteComponent() {
 			setTimeout(() => setSaveMessage(""), 3000);
 		} catch (error) {
 			console.error("Failed to save success definition:", error);
-			const errorMessage = error instanceof Error ? error.message : "Unknown error";
-			if (errorMessage.includes("Invalid or expired token")) {
-				setSaveMessage("⚠ Session expired. Please refresh the page and log in again.");
-			} else if (errorMessage.includes("authentication token")) {
-				setSaveMessage("⚠ Authentication required. Please log in.");
-			} else {
-				setSaveMessage(`Failed to save: ${errorMessage}`);
-			}
+			const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
+				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					setSaveMessage(`Failed to save: ${errorMessage}`);
+				}
 			setTimeout(() => setSaveMessage(""), 5000);
 		} finally {
 			setSubmitting(false);

@@ -40,6 +40,7 @@ import {
 	User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/")({
 	component: Index,

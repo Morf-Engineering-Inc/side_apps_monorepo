@@ -20,6 +20,7 @@ import {
 	TrendingUp,
 } from "lucide-react";
 import type React from "react";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/become")({
@@ -61,10 +62,11 @@ function RouteComponent() {
 				setEntries(fetchedEntries);
 			} catch (err) {
 				console.error("Error loading entries:", err);
-				const errorMessage = err instanceof Error ? err.message : "Failed to load entries";
-				if (errorMessage.includes("Invalid or expired token")) {
-					setError("⚠ Session expired. Please refresh the page and log in again.");
+				const authError = getAuthErrorMessage(err);
+				if (authError) {
+					setError(authError);
 				} else {
+					const errorMessage = err instanceof Error ? err.message : "Failed to load entries";
 					setError(errorMessage);
 				}
 			} finally {

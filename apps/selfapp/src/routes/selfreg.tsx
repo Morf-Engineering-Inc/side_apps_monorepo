@@ -15,6 +15,7 @@ import {
 	listSelfRegEntries,
 	type SelfRegEntry,
 } from "@/lib/api-client-entities";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Loader2, Sparkles, Trash2 } from "lucide-react";
@@ -51,10 +52,11 @@ function RouteComponent() {
 				setEntries(sorted);
 			} catch (error) {
 				console.error("Failed to load self-reg entries:", error);
-				const errorMessage = error instanceof Error ? error.message : "Unknown error";
-				if (errorMessage.includes("Invalid or expired token")) {
-					setSaveMessage("⚠ Session expired. Please refresh the page and log in again.");
+				const authError = getAuthErrorMessage(error);
+				if (authError) {
+					setSaveMessage(authError);
 				} else {
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
 					setSaveMessage(`Failed to load entries: ${errorMessage}`);
 				}
 			} finally {
@@ -94,12 +96,11 @@ function RouteComponent() {
 			resetForm();
 		} catch (error) {
 			console.error("Failed to save entry:", error);
-			const errorMessage = error instanceof Error ? error.message : "Unknown error";
-			if (errorMessage.includes("Invalid or expired token")) {
-				setSaveMessage("⚠ Session expired. Please refresh the page and log in again.");
-			} else if (errorMessage.includes("authentication token")) {
-				setSaveMessage("⚠ Authentication required. Please log in.");
+			const authError = getAuthErrorMessage(error);
+			if (authError) {
+				setSaveMessage(authError);
 			} else {
+				const errorMessage = error instanceof Error ? error.message : "Unknown error";
 				setSaveMessage(`Failed to save: ${errorMessage}`);
 			}
 			setTimeout(() => setSaveMessage(""), 5000);
@@ -119,10 +120,11 @@ function RouteComponent() {
 			setTimeout(() => setSaveMessage(""), 2000);
 		} catch (error) {
 			console.error("Failed to delete entry:", error);
-			const errorMessage = error instanceof Error ? error.message : "Unknown error";
-			if (errorMessage.includes("Invalid or expired token")) {
-				setSaveMessage("⚠ Session expired. Please refresh the page and log in again.");
+			const authError = getAuthErrorMessage(error);
+			if (authError) {
+				setSaveMessage(authError);
 			} else {
+				const errorMessage = error instanceof Error ? error.message : "Unknown error";
 				setSaveMessage(`Failed to delete: ${errorMessage}`);
 			}
 			setTimeout(() => setSaveMessage(""), 5000);
