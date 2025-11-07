@@ -96,18 +96,15 @@ function LoginPage() {
 
 		const result = await confirmSignup(verificationUsername, verificationCode);
 		if (result.success) {
-			// Verification successful, now try to login
-			const loginResult = await login(verificationUsername, signupPassword);
-			if (loginResult.success) {
-				navigate({ to: "/" });
-			} else {
-				// Verification worked but login failed - should not happen
-				setVerificationError("Verification successful! Please login.");
-				setTimeout(() => {
-					setNeedsVerification(false);
-					setVerificationCode('');
-				}, 2000);
-			}
+			// Verification successful - redirect to login tab
+			setVerificationError("Email verified successfully! You can now sign in.");
+			setTimeout(() => {
+				setNeedsVerification(false);
+				setVerificationCode('');
+				setVerificationError('');
+				// Pre-fill login email for convenience
+				setLoginEmail(verificationUsername);
+			}, 2000);
 		} else {
 			setVerificationError(result.error || "Verification failed");
 		}
@@ -164,7 +161,7 @@ function LoginPage() {
 									/>
 								</div>
 								{verificationError && (
-									<p className="text-sm text-red-600 dark:text-red-400">{verificationError}</p>
+									<p className={`text-sm ${verificationError.includes('successfully') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{verificationError}</p>
 								)}
 								{resendSuccess && (
 									<p className="text-sm text-green-600 dark:text-green-400">Code resent successfully!</p>
