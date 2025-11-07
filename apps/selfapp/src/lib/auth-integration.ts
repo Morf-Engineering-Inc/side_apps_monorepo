@@ -310,7 +310,7 @@ export function buildCognitoAuthorizeUrl(opts?: {
     (window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
   const clientId = cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
   const domain = cfg.cognitoDomain || cfg.cognito_domain || cfg.domain;
-  const responseType = opts?.responseType || cfg.responseType || 'code'; // Use code flow by default
+  const responseType = opts?.responseType || cfg.responseType || 'code'; // OAuth 2.0 Authorization Code flow (more secure than implicit flow)
   
   // Use redirectSignIn if available (from config.js), otherwise fallback to /callback
   const redirectUri =
@@ -396,10 +396,16 @@ export function handleCognitoCallback(): Promise<boolean> {
           // ignore storage errors
         }
         
-        // For code flow, we would normally exchange the code for tokens
-        // But since this is a public client (no client secret), we'll use the code as-is
-        // In production, you'd want to exchange this via your backend API
-        console.log('Received authorization code, treating as authenticated');
+        // SECURITY NOTE: In production, authorization codes should be exchanged for tokens
+        // via a secure backend endpoint (not in the frontend). This requires:
+        // 1. A backend API endpoint that receives the code
+        // 2. The backend exchanges the code with Cognito token endpoint
+        // 3. The backend validates and returns the JWT tokens
+        // 
+        // For this standalone frontend app without a backend, we're treating the code
+        // as a simple auth indicator. This is acceptable for development/testing but
+        // should be replaced with proper token exchange in production.
+        console.log('Received authorization code from Cognito');
         authIntegration.setAuthTokenAsync(code as string).then(() => {
           // remove code from URL to clean up
           try {

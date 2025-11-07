@@ -12,31 +12,33 @@ function CallbackPage() {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>(
     'processing'
   );
+  const [checkAttempts, setCheckAttempts] = useState(0);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        // The AuthContext already handles the callback in its useEffect
-        // Just wait a moment for it to complete
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Monitor authentication state changes
+    if (isAuthenticated) {
+      setStatus('success');
+      // Redirect to home page after successful authentication
+      const timer = setTimeout(() => {
+        navigate({ to: '/' });
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
 
-        if (isAuthenticated) {
-          setStatus('success');
-          // Redirect to home page after successful authentication
-          setTimeout(() => {
-            navigate({ to: '/' });
-          }, 1000);
-        } else {
-          setStatus('error');
-        }
-      } catch (error) {
-        console.error('Error handling callback:', error);
+    // Give the auth context time to process the callback
+    // Check every 500ms for up to 10 seconds (20 attempts)
+    if (checkAttempts < 20) {
+      const timer = setTimeout(() => {
+        setCheckAttempts((prev) => prev + 1);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      // After 10 seconds, if still not authenticated, show error
+      if (!isAuthenticated && status === 'processing') {
         setStatus('error');
       }
-    };
-
-    handleCallback();
-  }, [isAuthenticated, navigate]);
+    }
+  }, [isAuthenticated, navigate, status, checkAttempts]);
 
   if (status === 'processing') {
     return (
