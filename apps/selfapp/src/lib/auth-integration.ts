@@ -481,10 +481,10 @@ async function signUpWithPassword(
 			clearTimeout(timeoutId);
 			if (error instanceof Error && error.name === "AbortError") {
 				console.error("Signup request timed out");
+				return false;
 			} else {
 				throw error;
 			}
-			return false;
 		}
 	} catch (error) {
 		console.error("Error signing up:", error);
