@@ -6,13 +6,21 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, Check, Heart, Target, TrendingUp, Loader2, AlertCircle } from "lucide-react";
-import type React from "react";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import * as apiClient from "@/lib/api-client";
 import type { Entry } from "@/lib/api-client";
-import { useAuth } from "@/hooks/use-auth";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+	AlertCircle,
+	BookOpen,
+	Check,
+	Heart,
+	Loader2,
+	Target,
+	TrendingUp,
+} from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/become")({
 	component: RouteComponent,
@@ -24,7 +32,9 @@ function RouteComponent() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
-	const [currentEntry, setCurrentEntry] = useState<Omit<Entry, 'userId' | 'entryId' | 'createdAt' | 'updatedAt'>>({
+	const [currentEntry, setCurrentEntry] = useState<
+		Omit<Entry, "userId" | "entryId" | "createdAt" | "updatedAt">
+	>({
 		date: new Date().toISOString().split("T")[0],
 		action: "",
 		motive: "",
@@ -50,8 +60,8 @@ function RouteComponent() {
 				const fetchedEntries = await apiClient.getEntries(100);
 				setEntries(fetchedEntries);
 			} catch (err) {
-				console.error('Error loading entries:', err);
-				setError(err instanceof Error ? err.message : 'Failed to load entries');
+				console.error("Error loading entries:", err);
+				setError(err instanceof Error ? err.message : "Failed to load entries");
 			} finally {
 				setLoading(false);
 			}
@@ -62,21 +72,21 @@ function RouteComponent() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		
+
 		if (!isAuthenticated) {
-			setError('Please sign in to save entries');
+			setError("Please sign in to save entries");
 			return;
 		}
 
 		try {
 			setSubmitting(true);
 			setError(null);
-			
+
 			const newEntry = await apiClient.createEntry(currentEntry);
-			
+
 			// Add to local state
 			setEntries([newEntry, ...entries]);
-			
+
 			// Reset form
 			setCurrentEntry({
 				date: new Date().toISOString().split("T")[0],
@@ -90,8 +100,8 @@ function RouteComponent() {
 				reflection: "",
 			});
 		} catch (err) {
-			console.error('Error creating entry:', err);
-			setError(err instanceof Error ? err.message : 'Failed to save entry');
+			console.error("Error creating entry:", err);
+			setError(err instanceof Error ? err.message : "Failed to save entry");
 		} finally {
 			setSubmitting(false);
 		}
@@ -440,7 +450,7 @@ function RouteComponent() {
 									Saving...
 								</>
 							) : (
-								'Record Progress'
+								"Record Progress"
 							)}
 						</button>
 					</form>
@@ -475,47 +485,43 @@ function RouteComponent() {
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-3">
-							{entries
-								.slice(0, 5)
-								.map((entry) => (
-									<div
-										key={entry.entryId}
-										className="border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded"
-									>
-										<div className="flex justify-between items-start mb-1">
-											<p className="font-medium">{entry.action}</p>
-											<span className="text-sm text-gray-500">
-												{entry.date}
-											</span>
-										</div>
-										<p className="text-sm text-gray-600 italic">
-											Motive: {entry.motive}
-										</p>
-										{entry.reflection && (
-											<p className="text-sm text-gray-700 mt-2">
-												{entry.reflection}
-											</p>
-										)}
-										<div className="flex gap-2 mt-2">
-											{entry.conscienceCheck && (
-												<span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-													<Check className="w-3 h-3 inline mr-1" />
-													Clear Conscience
-												</span>
-											)}
-											{entry.hearingHisVoice && (
-												<span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-													His Voice
-												</span>
-											)}
-											{entry.losingEvilDesires && (
-												<span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-													No Evil Desires
-												</span>
-											)}
-										</div>
+							{entries.slice(0, 5).map((entry) => (
+								<div
+									key={entry.entryId}
+									className="border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded"
+								>
+									<div className="flex justify-between items-start mb-1">
+										<p className="font-medium">{entry.action}</p>
+										<span className="text-sm text-gray-500">{entry.date}</span>
 									</div>
-								))}
+									<p className="text-sm text-gray-600 italic">
+										Motive: {entry.motive}
+									</p>
+									{entry.reflection && (
+										<p className="text-sm text-gray-700 mt-2">
+											{entry.reflection}
+										</p>
+									)}
+									<div className="flex gap-2 mt-2">
+										{entry.conscienceCheck && (
+											<span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+												<Check className="w-3 h-3 inline mr-1" />
+												Clear Conscience
+											</span>
+										)}
+										{entry.hearingHisVoice && (
+											<span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+												His Voice
+											</span>
+										)}
+										{entry.losingEvilDesires && (
+											<span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+												No Evil Desires
+											</span>
+										)}
+									</div>
+								</div>
+							))}
 						</div>
 					</CardContent>
 				</Card>

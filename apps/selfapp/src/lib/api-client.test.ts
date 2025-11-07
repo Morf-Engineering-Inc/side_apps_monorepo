@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	type Entry,
+	checkHealth,
 	createEntry,
 	deleteEntry,
 	getEntries,
 	getEntry,
 	updateEntry,
-	checkHealth,
-	type Entry,
 } from "./api-client";
 import * as authIntegration from "./auth-integration";
 
@@ -149,9 +149,7 @@ describe("API Client - CRUD Operations", () => {
 				json: async () => ({ success: true, entry: undefined }),
 			});
 
-			await expect(getEntry("nonexistent")).rejects.toThrow(
-				"Entry not found",
-			);
+			await expect(getEntry("nonexistent")).rejects.toThrow("Entry not found");
 		});
 
 		it("should handle 404 errors", async () => {
@@ -222,9 +220,7 @@ describe("API Client - CRUD Operations", () => {
 				json: async () => ({ error: "Invalid entry data" }),
 			});
 
-			await expect(createEntry(newEntry)).rejects.toThrow(
-				"Invalid entry data",
-			);
+			await expect(createEntry(newEntry)).rejects.toThrow("Invalid entry data");
 		});
 
 		it("should require authentication token", async () => {
@@ -387,9 +383,7 @@ describe("API Client - CRUD Operations", () => {
 				status: 503,
 			});
 
-			await expect(checkHealth()).rejects.toThrow(
-				"Health check failed: 503",
-			);
+			await expect(checkHealth()).rejects.toThrow("Health check failed: 503");
 		});
 
 		it("should throw error when API URL is not configured", async () => {
@@ -426,9 +420,7 @@ describe("API Client - CRUD Operations", () => {
 		});
 
 		it("should handle network timeouts", async () => {
-			(global.fetch as any).mockRejectedValueOnce(
-				new Error("Network timeout"),
-			);
+			(global.fetch as any).mockRejectedValueOnce(new Error("Network timeout"));
 
 			await expect(getEntries()).rejects.toThrow("Network timeout");
 		});

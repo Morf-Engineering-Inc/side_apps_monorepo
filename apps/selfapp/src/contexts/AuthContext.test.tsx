@@ -1,9 +1,9 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
-import { AuthProvider, useAuth } from "./AuthContext";
 import * as authIntegration from "@/lib/auth-integration";
 import * as jwtUtils from "@/lib/jwt-utils";
+import { AuthProvider, useAuth } from "./AuthContext";
 
 // Mock the auth integration and JWT utils modules
 vi.mock("@/lib/auth-integration", () => ({
@@ -40,18 +40,20 @@ function TestComponent() {
 				</div>
 			)}
 			<button
+				type="button"
 				onClick={() => login("test@example.com", "password123")}
 				data-testid="login-btn"
 			>
 				Login
 			</button>
 			<button
+				type="button"
 				onClick={() => signup("test@example.com", "password123", "Test User")}
 				data-testid="signup-btn"
 			>
 				Signup
 			</button>
-			<button onClick={logout} data-testid="logout-btn">
+			<button type="button" onClick={logout} data-testid="logout-btn">
 				Logout
 			</button>
 		</div>
@@ -145,9 +147,7 @@ describe("AuthContext - Context API Tests", () => {
 
 			// Wait for initial auth check
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("login-btn"));
@@ -166,12 +166,12 @@ describe("AuthContext - Context API Tests", () => {
 			// This test is skipped due to complex async timing issues in test environment
 			// The actual functionality works correctly in production
 			vi.mocked(authIntegration.isCognitoConfigured).mockReturnValue(true);
-			vi.mocked(
-				authIntegration.authenticateWithPassword,
-			).mockResolvedValueOnce({
-				idToken: "mock-id-token",
-				accessToken: "mock-access-token",
-			});
+			vi.mocked(authIntegration.authenticateWithPassword).mockResolvedValueOnce(
+				{
+					idToken: "mock-id-token",
+					accessToken: "mock-access-token",
+				},
+			);
 
 			const mockPayload = {
 				sub: "cognito-user-id",
@@ -187,9 +187,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("login-btn"));
@@ -225,9 +223,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("login-btn"));
@@ -256,9 +252,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("login-btn"));
@@ -266,9 +260,11 @@ describe("AuthContext - Context API Tests", () => {
 			await waitFor(() => {
 				const savedUser = localStorage.getItem("user");
 				expect(savedUser).toBeTruthy();
-				const parsedUser = JSON.parse(savedUser!);
-				expect(parsedUser.email).toBe("test@example.com");
-				expect(parsedUser.password).toBeUndefined(); // Password should not be stored
+				if (savedUser) {
+					const parsedUser = JSON.parse(savedUser);
+					expect(parsedUser.email).toBe("test@example.com");
+					expect(parsedUser.password).toBeUndefined(); // Password should not be stored
+				}
 			});
 		});
 	});
@@ -282,9 +278,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("signup-btn"));
@@ -315,9 +309,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("signup-btn"));
@@ -354,9 +346,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			fireEvent.click(screen.getByTestId("signup-btn"));
@@ -415,6 +405,7 @@ describe("AuthContext - Context API Tests", () => {
 			});
 
 			// Setup Cognito config
+			// biome-ignore lint/suspicious/noExplicitAny: Test requires setting window properties
 			(window as any).AWS_CONFIG = {
 				cognitoDomain: "test.auth.us-east-1.amazoncognito.com",
 				cognito_client_id: "test-client-id",
@@ -444,7 +435,9 @@ describe("AuthContext - Context API Tests", () => {
 
 			// Check if redirect URL was set (in real scenario, would navigate)
 			expect(mockLocation.href).toContain("logout");
-			expect(mockLocation.href).toContain("test.auth.us-east-1.amazoncognito.com");
+			expect(mockLocation.href).toContain(
+				"test.auth.us-east-1.amazoncognito.com",
+			);
 		});
 	});
 
@@ -517,9 +510,7 @@ describe("AuthContext - Context API Tests", () => {
 			);
 
 			await waitFor(() => {
-				expect(
-					authIntegration.initializeAuthIntegration,
-				).toHaveBeenCalled();
+				expect(authIntegration.initializeAuthIntegration).toHaveBeenCalled();
 			});
 
 			expect(screen.getByTestId("auth-status")).toHaveTextContent(

@@ -19,7 +19,7 @@ async function generateCodeVerifier(): Promise<string> {
 }
 
 function base64UrlEncode(buffer: Uint8Array): string {
-	let binary = '';
+	let binary = "";
 	for (let i = 0; i < buffer.length; i++) {
 		binary += String.fromCharCode(buffer[i]);
 	}
@@ -357,14 +357,17 @@ async function authenticateWithPassword(
 					response.status,
 					errorText,
 				);
-				
+
 				// Parse Cognito error response
 				let errorMessage = "Invalid email or password";
 				try {
 					const errorData = JSON.parse(errorText);
 					const errorCode = errorData.__type || errorData.code;
-					
-					if (errorCode === "UserNotFoundException" || errorCode === "NotAuthorizedException") {
+
+					if (
+						errorCode === "UserNotFoundException" ||
+						errorCode === "NotAuthorizedException"
+					) {
 						errorMessage = "Invalid email or password";
 					} else if (errorCode === "UserNotConfirmedException") {
 						errorMessage = "Please verify your email before signing in";
@@ -378,7 +381,7 @@ async function authenticateWithPassword(
 				} catch (e) {
 					// Use default error message
 				}
-				
+
 				return { error: errorMessage };
 			}
 
@@ -423,7 +426,12 @@ async function signUpWithPassword(
 	email: string,
 	password: string,
 	name: string,
-): Promise<{ success: boolean; error?: string; needsVerification?: boolean; username?: string }> {
+): Promise<{
+	success: boolean;
+	error?: string;
+	needsVerification?: boolean;
+	username?: string;
+}> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -441,7 +449,10 @@ async function signUpWithPassword(
 		const parts = userPoolId.split("_");
 		if (parts.length !== 2) {
 			console.error("Invalid user pool ID format:", userPoolId);
-			return { success: false, error: "Authentication service configuration error" };
+			return {
+				success: false,
+				error: "Authentication service configuration error",
+			};
 		}
 		const region = parts[0];
 
@@ -485,17 +496,18 @@ async function signUpWithPassword(
 			if (!response.ok) {
 				const errorText = await response.text();
 				console.error("Signup failed:", response.status, errorText);
-				
+
 				// Parse Cognito error response
 				let errorMessage = "Signup failed. Please try again";
 				try {
 					const errorData = JSON.parse(errorText);
 					const errorCode = errorData.__type || errorData.code;
-					
+
 					if (errorCode === "UsernameExistsException") {
 						errorMessage = "An account with this email already exists";
 					} else if (errorCode === "InvalidPasswordException") {
-						errorMessage = "Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
+						errorMessage =
+							"Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols";
 					} else if (errorCode === "InvalidParameterException") {
 						errorMessage = "Invalid email or password format";
 					} else if (errorCode === "TooManyRequestsException") {
@@ -506,7 +518,7 @@ async function signUpWithPassword(
 				} catch (e) {
 					// Use default error message
 				}
-				
+
 				return { success: false, error: errorMessage };
 			}
 
@@ -515,12 +527,12 @@ async function signUpWithPassword(
 
 			// Check if user needs to confirm their email
 			const needsVerification = !result.UserConfirmed;
-			
+
 			// Note: User may need to confirm their email before they can sign in
-			return { 
-				success: true, 
+			return {
+				success: true,
 				needsVerification,
-				username: email
+				username: email,
 			};
 		} catch (error) {
 			clearTimeout(timeoutId);
@@ -532,7 +544,10 @@ async function signUpWithPassword(
 		}
 	} catch (error) {
 		console.error("Error signing up:", error);
-		return { success: false, error: "An unexpected error occurred. Please try again" };
+		return {
+			success: false,
+			error: "An unexpected error occurred. Please try again",
+		};
 	}
 }
 
@@ -737,7 +752,9 @@ export function handleCognitoCallback(): Promise<boolean> {
 				try {
 					const savedState =
 						window.sessionStorage?.getItem("cognito_auth_state");
-					codeVerifier = window.sessionStorage?.getItem("cognito_code_verifier");
+					codeVerifier = window.sessionStorage?.getItem(
+						"cognito_code_verifier",
+					);
 
 					if (savedState && savedState !== state) {
 						console.error("State mismatch in OAuth callback");
@@ -859,7 +876,10 @@ async function confirmSignUp(
 		const parts = userPoolId.split("_");
 		if (parts.length !== 2) {
 			console.error("Invalid user pool ID format:", userPoolId);
-			return { success: false, error: "Authentication service configuration error" };
+			return {
+				success: false,
+				error: "Authentication service configuration error",
+			};
 		}
 		const region = parts[0];
 
@@ -892,16 +912,18 @@ async function confirmSignUp(
 			if (!response.ok) {
 				const errorText = await response.text();
 				console.error("Confirmation failed:", response.status, errorText);
-				
+
 				let errorMessage = "Verification failed. Please try again";
 				try {
 					const errorData = JSON.parse(errorText);
 					const errorCode = errorData.__type || errorData.code;
-					
+
 					if (errorCode === "CodeMismatchException") {
-						errorMessage = "Invalid verification code. Please check and try again";
+						errorMessage =
+							"Invalid verification code. Please check and try again";
 					} else if (errorCode === "ExpiredCodeException") {
-						errorMessage = "Verification code has expired. Please request a new one";
+						errorMessage =
+							"Verification code has expired. Please request a new one";
 					} else if (errorCode === "NotAuthorizedException") {
 						errorMessage = "User is already confirmed";
 					} else if (errorCode === "TooManyRequestsException") {
@@ -912,7 +934,7 @@ async function confirmSignUp(
 				} catch (e) {
 					// Use default error message
 				}
-				
+
 				return { success: false, error: errorMessage };
 			}
 
@@ -928,7 +950,10 @@ async function confirmSignUp(
 		}
 	} catch (error) {
 		console.error("Error confirming signup:", error);
-		return { success: false, error: "An unexpected error occurred. Please try again" };
+		return {
+			success: false,
+			error: "An unexpected error occurred. Please try again",
+		};
 	}
 }
 
@@ -955,7 +980,10 @@ async function resendConfirmationCode(
 		const parts = userPoolId.split("_");
 		if (parts.length !== 2) {
 			console.error("Invalid user pool ID format:", userPoolId);
-			return { success: false, error: "Authentication service configuration error" };
+			return {
+				success: false,
+				error: "Authentication service configuration error",
+			};
 		}
 		const region = parts[0];
 
@@ -976,7 +1004,8 @@ async function resendConfirmationCode(
 				method: "POST",
 				headers: {
 					"Content-Type": "application/x-amz-json-1.1",
-					"X-Amz-Target": "AWSCognitoIdentityProviderService.ResendConfirmationCode",
+					"X-Amz-Target":
+						"AWSCognitoIdentityProviderService.ResendConfirmationCode",
 				},
 				body: JSON.stringify(requestBody),
 				signal: controller.signal,
@@ -987,14 +1016,18 @@ async function resendConfirmationCode(
 			if (!response.ok) {
 				const errorText = await response.text();
 				console.error("Resend failed:", response.status, errorText);
-				
+
 				let errorMessage = "Failed to resend code. Please try again";
 				try {
 					const errorData = JSON.parse(errorText);
 					const errorCode = errorData.__type || errorData.code;
-					
-					if (errorCode === "LimitExceededException" || errorCode === "TooManyRequestsException") {
-						errorMessage = "Too many attempts. Please wait a few minutes before trying again";
+
+					if (
+						errorCode === "LimitExceededException" ||
+						errorCode === "TooManyRequestsException"
+					) {
+						errorMessage =
+							"Too many attempts. Please wait a few minutes before trying again";
 					} else if (errorCode === "InvalidParameterException") {
 						errorMessage = "User is already confirmed";
 					} else if (errorData.message) {
@@ -1003,7 +1036,7 @@ async function resendConfirmationCode(
 				} catch (e) {
 					// Use default error message
 				}
-				
+
 				return { success: false, error: errorMessage };
 			}
 
@@ -1019,14 +1052,22 @@ async function resendConfirmationCode(
 		}
 	} catch (error) {
 		console.error("Error resending confirmation code:", error);
-		return { success: false, error: "An unexpected error occurred. Please try again" };
+		return {
+			success: false,
+			error: "An unexpected error occurred. Please try again",
+		};
 	}
 }
 
 /**
  * Authenticate with Cognito using username and password (for custom login form)
  */
-export { authenticateWithPassword, signUpWithPassword, confirmSignUp, resendConfirmationCode };
+export {
+	authenticateWithPassword,
+	signUpWithPassword,
+	confirmSignUp,
+	resendConfirmationCode,
+};
 
 // Export default for convenience
 export default authIntegration;
