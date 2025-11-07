@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+	type SuccessDefinition,
 	createSuccessDefinition,
 	listSuccessDefinitions,
 	updateSuccessDefinition,
-	type SuccessDefinition,
 } from "@/lib/api-client-entities";
 import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
@@ -574,9 +574,7 @@ function RouteComponent() {
 							)}
 						</Button>
 						{saveMessage && (
-							<p className={getMessageClassName(saveMessage)}>
-								{saveMessage}
-							</p>
+							<p className={getMessageClassName(saveMessage)}>{saveMessage}</p>
 						)}
 						{definition?.updatedAt && (
 							<p className="text-xs text-center app-text-muted">

@@ -182,7 +182,10 @@ export async function getEntity<T extends BaseEntity>(
  */
 export async function createEntity<T extends BaseEntity>(
 	entityType: string,
-	entity: Omit<T, "userId" | "entryId" | "createdAt" | "updatedAt" | "entityType">,
+	entity: Omit<
+		T,
+		"userId" | "entryId" | "createdAt" | "updatedAt" | "entityType"
+	>,
 ): Promise<T> {
 	const response = await apiRequest<ApiResponse<T>>(
 		`/api/${entityType.toLowerCase()}`,
@@ -239,47 +242,94 @@ export async function deleteEntity(
 
 // Daily Log
 export const listDailyLogs = () => listEntities<DailyLogEntry>("daily-log");
-export const getDailyLog = (id: string) => getEntity<DailyLogEntry>("daily-log", id);
-export const createDailyLog = (entry: Omit<DailyLogEntry, "userId" | "entryId" | "createdAt" | "updatedAt" | "entityType">) =>
-	createEntity<DailyLogEntry>("daily-log", entry);
-export const updateDailyLog = (id: string, updates: Partial<Omit<DailyLogEntry, "userId" | "entryId" | "createdAt" | "entityType">>) =>
-	updateEntity<DailyLogEntry>("daily-log", id, updates);
+export const getDailyLog = (id: string) =>
+	getEntity<DailyLogEntry>("daily-log", id);
+export const createDailyLog = (
+	entry: Omit<
+		DailyLogEntry,
+		"userId" | "entryId" | "createdAt" | "updatedAt" | "entityType"
+	>,
+) => createEntity<DailyLogEntry>("daily-log", entry);
+export const updateDailyLog = (
+	id: string,
+	updates: Partial<
+		Omit<DailyLogEntry, "userId" | "entryId" | "createdAt" | "entityType">
+	>,
+) => updateEntity<DailyLogEntry>("daily-log", id, updates);
 export const deleteDailyLog = (id: string) => deleteEntity("daily-log", id);
 
 // Become
 export const listBecomeEntries = () => listEntities<BecomeEntry>("become");
-export const getBecomeEntry = (id: string) => getEntity<BecomeEntry>("become", id);
-export const createBecomeEntry = (entry: Omit<BecomeEntry, "userId" | "entryId" | "createdAt" | "updatedAt" | "entityType">) =>
-	createEntity<BecomeEntry>("become", entry);
-export const updateBecomeEntry = (id: string, updates: Partial<Omit<BecomeEntry, "userId" | "entryId" | "createdAt" | "entityType">>) =>
-	updateEntity<BecomeEntry>("become", id, updates);
+export const getBecomeEntry = (id: string) =>
+	getEntity<BecomeEntry>("become", id);
+export const createBecomeEntry = (
+	entry: Omit<
+		BecomeEntry,
+		"userId" | "entryId" | "createdAt" | "updatedAt" | "entityType"
+	>,
+) => createEntity<BecomeEntry>("become", entry);
+export const updateBecomeEntry = (
+	id: string,
+	updates: Partial<
+		Omit<BecomeEntry, "userId" | "entryId" | "createdAt" | "entityType">
+	>,
+) => updateEntity<BecomeEntry>("become", id, updates);
 export const deleteBecomeEntry = (id: string) => deleteEntity("become", id);
 
 // Success Definition
-export const listSuccessDefinitions = () => listEntities<SuccessDefinition>("success");
-export const getSuccessDefinition = (id: string) => getEntity<SuccessDefinition>("success", id);
-export const createSuccessDefinition = (entry: Omit<SuccessDefinition, "userId" | "entryId" | "createdAt" | "updatedAt" | "entityType">) =>
-	createEntity<SuccessDefinition>("success", entry);
-export const updateSuccessDefinition = (id: string, updates: Partial<Omit<SuccessDefinition, "userId" | "entryId" | "createdAt" | "entityType">>) =>
-	updateEntity<SuccessDefinition>("success", id, updates);
-export const deleteSuccessDefinition = (id: string) => deleteEntity("success", id);
+export const listSuccessDefinitions = () =>
+	listEntities<SuccessDefinition>("success");
+export const getSuccessDefinition = (id: string) =>
+	getEntity<SuccessDefinition>("success", id);
+export const createSuccessDefinition = (
+	entry: Omit<
+		SuccessDefinition,
+		"userId" | "entryId" | "createdAt" | "updatedAt" | "entityType"
+	>,
+) => createEntity<SuccessDefinition>("success", entry);
+export const updateSuccessDefinition = (
+	id: string,
+	updates: Partial<
+		Omit<SuccessDefinition, "userId" | "entryId" | "createdAt" | "entityType">
+	>,
+) => updateEntity<SuccessDefinition>("success", id, updates);
+export const deleteSuccessDefinition = (id: string) =>
+	deleteEntity("success", id);
 
 // Let God Prevail
 export const listLetGodEntries = () => listEntities<LetGodEntry>("letgod");
-export const getLetGodEntry = (id: string) => getEntity<LetGodEntry>("letgod", id);
-export const createLetGodEntry = (entry: Omit<LetGodEntry, "userId" | "entryId" | "createdAt" | "updatedAt" | "entityType">) =>
-	createEntity<LetGodEntry>("letgod", entry);
-export const updateLetGodEntry = (id: string, updates: Partial<Omit<LetGodEntry, "userId" | "entryId" | "createdAt" | "entityType">>) =>
-	updateEntity<LetGodEntry>("letgod", id, updates);
+export const getLetGodEntry = (id: string) =>
+	getEntity<LetGodEntry>("letgod", id);
+export const createLetGodEntry = (
+	entry: Omit<
+		LetGodEntry,
+		"userId" | "entryId" | "createdAt" | "updatedAt" | "entityType"
+	>,
+) => createEntity<LetGodEntry>("letgod", entry);
+export const updateLetGodEntry = (
+	id: string,
+	updates: Partial<
+		Omit<LetGodEntry, "userId" | "entryId" | "createdAt" | "entityType">
+	>,
+) => updateEntity<LetGodEntry>("letgod", id, updates);
 export const deleteLetGodEntry = (id: string) => deleteEntity("letgod", id);
 
 // Self Regulation
 export const listSelfRegEntries = () => listEntities<SelfRegEntry>("selfreg");
-export const getSelfRegEntry = (id: string) => getEntity<SelfRegEntry>("selfreg", id);
-export const createSelfRegEntry = (entry: Omit<SelfRegEntry, "userId" | "entryId" | "createdAt" | "updatedAt" | "entityType">) =>
-	createEntity<SelfRegEntry>("selfreg", entry);
-export const updateSelfRegEntry = (id: string, updates: Partial<Omit<SelfRegEntry, "userId" | "entryId" | "createdAt" | "entityType">>) =>
-	updateEntity<SelfRegEntry>("selfreg", id, updates);
+export const getSelfRegEntry = (id: string) =>
+	getEntity<SelfRegEntry>("selfreg", id);
+export const createSelfRegEntry = (
+	entry: Omit<
+		SelfRegEntry,
+		"userId" | "entryId" | "createdAt" | "updatedAt" | "entityType"
+	>,
+) => createEntity<SelfRegEntry>("selfreg", entry);
+export const updateSelfRegEntry = (
+	id: string,
+	updates: Partial<
+		Omit<SelfRegEntry, "userId" | "entryId" | "createdAt" | "entityType">
+	>,
+) => updateEntity<SelfRegEntry>("selfreg", id, updates);
 export const deleteSelfRegEntry = (id: string) => deleteEntity("selfreg", id);
 
 /**

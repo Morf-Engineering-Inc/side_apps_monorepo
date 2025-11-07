@@ -14,10 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+	type DailyLogEntry,
 	createDailyLog,
 	listDailyLogs,
 	updateDailyLog,
-	type DailyLogEntry,
 } from "@/lib/api-client-entities";
 import type { Task } from "@/types/task-tracking";
 import {

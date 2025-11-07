@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+	type SelfRegEntry,
 	createSelfRegEntry,
 	deleteSelfRegEntry,
 	listSelfRegEntries,
-	type SelfRegEntry,
 } from "@/lib/api-client-entities";
 import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";

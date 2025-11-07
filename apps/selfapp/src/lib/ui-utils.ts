@@ -7,7 +7,7 @@
  */
 export function isErrorMessage(message: string): boolean {
 	if (!message) return false;
-	
+
 	const errorKeywords = [
 		"failed",
 		"error",
@@ -16,7 +16,7 @@ export function isErrorMessage(message: string): boolean {
 		"could not",
 		"unsuccessful",
 	];
-	
+
 	const lowerMessage = message.toLowerCase();
 	return errorKeywords.some((keyword) => lowerMessage.includes(keyword));
 }

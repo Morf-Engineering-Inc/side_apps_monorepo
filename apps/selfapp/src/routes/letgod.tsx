@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+	type LetGodEntry,
 	createLetGodEntry,
 	deleteLetGodEntry,
 	listLetGodEntries,
-	type LetGodEntry,
 } from "@/lib/api-client-entities";
 import { getMessageClassName } from "@/lib/ui-utils";
 import { createFileRoute } from "@tanstack/react-router";
@@ -404,7 +404,14 @@ function RouteComponent() {
 							</Button>
 						</div>
 						{saveMessage && (
-							<p className={getMessageClassName(saveMessage, "text-sm text-center font-medium", "text-red-600", "text-blue-600 dark:text-blue-400")}>
+							<p
+								className={getMessageClassName(
+									saveMessage,
+									"text-sm text-center font-medium",
+									"text-red-600",
+									"text-blue-600 dark:text-blue-400",
+								)}
+							>
 								{saveMessage}
 							</p>
 						)}
@@ -468,38 +475,38 @@ function RouteComponent() {
 										</div>
 									</div>
 
-										{entry.holyGhostGuidance && (
-											<div>
-												<p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">
-													Divine Guidance
-												</p>
-												<p className="text-sm app-text-subtle italic">
-													"{entry.holyGhostGuidance}"
-												</p>
-											</div>
-										)}
-
+									{entry.holyGhostGuidance && (
 										<div>
-											<p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-												Action Taken
+											<p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">
+												Divine Guidance
 											</p>
-											<p className="text-sm app-text-subtle">
-												{entry.actionTaken}
+											<p className="text-sm app-text-subtle italic">
+												"{entry.holyGhostGuidance}"
 											</p>
 										</div>
+									)}
 
-										{entry.reflection && (
-											<div>
-												<p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
-													Reflection
-												</p>
-												<p className="text-sm app-text-subtle">
-													{entry.reflection}
-												</p>
-											</div>
-										)}
+									<div>
+										<p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+											Action Taken
+										</p>
+										<p className="text-sm app-text-subtle">
+											{entry.actionTaken}
+										</p>
 									</div>
-								))}
+
+									{entry.reflection && (
+										<div>
+											<p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
+												Reflection
+											</p>
+											<p className="text-sm app-text-subtle">
+												{entry.reflection}
+											</p>
+										</div>
+									)}
+								</div>
+							))}
 						</div>
 					</CardContent>
 				</Card>
