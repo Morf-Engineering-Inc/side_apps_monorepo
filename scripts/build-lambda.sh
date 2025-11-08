@@ -86,6 +86,7 @@ build_function() {
 # Build each Lambda function
 build_function "api-handler"
 build_function "auth-handler"
+build_function "stripe-handler"
 
 # Clean up build directory
 rm -rf "$BUILD_DIR"
@@ -97,3 +98,4 @@ echo "Generated files:"
 echo "  - lambda/layers/dependencies.zip"
 echo "  - lambda/functions/api-handler.zip"
 echo "  - lambda/functions/auth-handler.zip"
+echo "  - lambda/functions/stripe-handler.zip"

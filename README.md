@@ -257,6 +257,7 @@ Comprehensive guides available in the [`docs/`](./docs) directory:
 - **[Namecheap DNS Setup](./docs/NAMECHEAP_DNS_SETUP.md)** - Quick DNS configuration reference
 - **[Custom Domain Setup](./docs/CUSTOM_DOMAIN_SETUP.md)** - Complete domain configuration guide
 - **[Cognito Setup](./docs/COGNITO_SETUP.md)** - Authentication configuration
+- **[Stripe Setup](./docs/STRIPE_SETUP.md)** - Payment processing and subscription configuration
 - **[Terraform Infrastructure](./terraform/README.md)** - Infrastructure deployment guide
 
 See the [Documentation Index](./docs/README.md) for a complete list.

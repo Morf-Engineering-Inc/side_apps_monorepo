@@ -80,6 +80,20 @@ AWS Cognito authentication configuration, including:
 
 ---
 
+### 💳 [Stripe Setup Guide](./STRIPE_SETUP.md)
+**Complete Stripe payment integration guide**
+
+Comprehensive guide for setting up Stripe payments:
+- GitHub secrets configuration
+- Stripe price creation with CLI
+- Webhook setup and verification
+- Testing payment flows
+- Security best practices
+
+**Use Case**: Setting up payment processing for subscription tiers
+
+---
+
 ### 🚀 [Deployment Fixes](./DEPLOYMENT_FIXES.md)
 Recent infrastructure fixes and deployment notes:
 - Terraform state management
@@ -119,6 +133,9 @@ Project task tracking and completion checklist
 
 ### I'm configuring authentication
 → **[Cognito Setup Guide](./COGNITO_SETUP.md)**
+
+### I'm setting up payment processing
+→ **[Stripe Setup Guide](./STRIPE_SETUP.md)** 💳
 
 ### I'm troubleshooting deployment
 → **[Deployment Fixes](./DEPLOYMENT_FIXES.md)**

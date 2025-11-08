@@ -363,6 +363,38 @@ resource "aws_lambda_function" "auth_handler" {
   }
 }
 
+# Stripe Handler Lambda Function
+resource "aws_lambda_function" "stripe_handler" {
+  filename         = "${path.module}/../lambda/functions/stripe-handler.zip"
+  function_name    = "${var.app_name}-stripe-handler"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  timeout          = 30
+  memory_size      = 256
+  source_code_hash = fileexists("${path.module}/../lambda/functions/stripe-handler.zip") ? filebase64sha256("${path.module}/../lambda/functions/stripe-handler.zip") : ""
+
+  layers = [aws_lambda_layer_version.dependencies.arn]
+
+  environment {
+    variables = {
+      ENVIRONMENT          = var.environment
+      USERS_TABLE_NAME     = aws_dynamodb_table.entries.name
+      ENTRIES_TABLE_NAME   = aws_dynamodb_table.entries.name
+      USER_POOL_ID         = aws_cognito_user_pool.main.id
+      CLIENT_ID            = aws_cognito_user_pool_client.main.id
+      AWS_REGION           = var.aws_region
+      STRIPE_SECRET_KEY    = var.stripe_live_secret_key
+      STRIPE_WEBHOOK_SECRET = var.stripe_webhook_secret
+      STRIPE_ACCOUNT_ID    = var.stripe_account_id
+    }
+  }
+
+  tags = {
+    Name = "${var.app_name}-stripe-handler"
+  }
+}
+
 # API Gateway HTTP API
 resource "aws_apigatewayv2_api" "main" {
   name          = "${var.app_name}-api"
@@ -393,11 +425,39 @@ resource "aws_apigatewayv2_integration" "api_handler" {
   integration_uri  = aws_lambda_function.api_handler.invoke_arn
 }
 
+# Stripe Handler API Gateway Integration
+resource "aws_apigatewayv2_integration" "stripe_handler" {
+  api_id           = aws_apigatewayv2_api.main.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.stripe_handler.invoke_arn
+}
+
 # API Gateway Route
 resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.main.id
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+# Stripe routes - checkout session creation
+resource "aws_apigatewayv2_route" "stripe_create_checkout" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /api/stripe/create-checkout"
+  target    = "integrations/${aws_apigatewayv2_integration.stripe_handler.id}"
+}
+
+# Stripe routes - webhook handler
+resource "aws_apigatewayv2_route" "stripe_webhook" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /api/stripe/webhook"
+  target    = "integrations/${aws_apigatewayv2_integration.stripe_handler.id}"
+}
+
+# Stripe routes - user subscription status
+resource "aws_apigatewayv2_route" "user_subscription" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "GET /api/user/subscription"
+  target    = "integrations/${aws_apigatewayv2_integration.stripe_handler.id}"
 }
 
 # API Gateway Stage
@@ -416,6 +476,15 @@ resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.api_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+# Lambda Permission for API Gateway - Stripe Handler
+resource "aws_lambda_permission" "stripe_api_gateway" {
+  statement_id  = "AllowAPIGatewayInvokeStripe"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.stripe_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

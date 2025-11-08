@@ -77,3 +77,9 @@ output "custom_domain_url" {
   description = "Custom domain URL"
   value       = "https://${var.domain_name}"
 }
+
+output "stripe_public_key" {
+  description = "Stripe Live Publishable Key for frontend use"
+  value       = var.stripe_live_public_key
+  sensitive   = false
+}

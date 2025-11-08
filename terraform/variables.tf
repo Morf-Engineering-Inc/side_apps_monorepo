@@ -39,3 +39,29 @@ variable "create_route53_zone" {
   type        = bool
   default     = false # Set to false since DNS is managed on Namecheap
 }
+
+variable "stripe_live_secret_key" {
+  description = "Stripe Live Secret Key for server-side API calls"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "stripe_webhook_secret" {
+  description = "Stripe Webhook Secret for verifying webhook signatures"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "stripe_live_public_key" {
+  description = "Stripe Live Publishable Key for client-side use"
+  type        = string
+  default     = ""
+}
+
+variable "stripe_account_id" {
+  description = "Stripe Account ID"
+  type        = string
+  default     = ""
+}
