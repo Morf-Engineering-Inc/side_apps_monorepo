@@ -18,6 +18,9 @@ export default defineConfig({
 		...creaoPlugins(),
 		TanStackRouterVite({
 			autoCodeSplitting: false, // affects pick-n-edit feature. disabled for now.
+			routesDirectory: "./src/routes",
+			generatedRouteTree: "./src/routeTree.gen.ts",
+			routeFileIgnorePattern: ".test.tsx$",
 		}),
 		viteReact({
 			jsxRuntime: "automatic",

@@ -10,6 +10,7 @@ import reportWebVitals from "./reportWebVitals.ts";
 import "./styles.css";
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 // Import and initialize auth integration (standalone mode)
 import { initializeAuthIntegration } from "@/lib/auth-integration";
 
@@ -82,7 +83,9 @@ if (rootElement && !rootElement.innerHTML) {
 		<StrictMode>
 			<QueryClientProvider client={queryClient}>
 				<AuthProvider>
-					<RouterProvider router={router} />
+					<SubscriptionProvider>
+						<RouterProvider router={router} />
+					</SubscriptionProvider>
 				</AuthProvider>
 			</QueryClientProvider>
 		</StrictMode>,

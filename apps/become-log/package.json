@@ -4,7 +4,7 @@
   "private": true,
   "description": "BecomeLog - Personal transformation tracking and journaling",
   "scripts": {
-    "dev": "echo 'Dev server not configured yet'",
+    "dev": "npx http-server src -p 8080 -c-1 -o",
     "build": "npm run build:copy",
     "build:copy": "mkdir -p ../../dist/public && cp -r src/* ../../dist/public/",
     "clean": "rm -rf ../../dist/public"

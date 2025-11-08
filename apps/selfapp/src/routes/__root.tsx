@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = [
 	"/callback",
 	"/privacy",
 	"/forgot-password",
+	"/pricing",
 ];
 
 function Root() {

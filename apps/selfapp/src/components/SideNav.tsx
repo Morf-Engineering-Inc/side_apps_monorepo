@@ -1,9 +1,12 @@
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
 	BarChart3,
 	BookOpen,
 	Brain,
 	Calendar,
+	CreditCard,
+	Lock,
 	Shield,
 	Sparkles,
 	Target,
@@ -11,6 +14,16 @@ import {
 	UserCircle,
 } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 
 type Props = {
 	active?: string;
@@ -24,18 +37,21 @@ const items: {
 	label: string;
 	icon: React.ReactNode;
 	path: string;
+	premium?: boolean; // Mark premium features
 }[] = [
 	{
 		id: "log",
 		label: "Daily Log",
 		icon: <Calendar className="h-4 w-4" />,
 		path: "/",
+		premium: false, // Free tier
 	},
 	{
 		id: "dashboard",
 		label: "Dashboard",
 		icon: <BarChart3 className="h-4 w-4" />,
 		path: "/",
+		premium: false, // Free tier (basic insights)
 	},
 	{
 		id: "insights",
@@ -54,36 +70,49 @@ const items: {
 		label: "Become",
 		icon: <BookOpen className="h-4 w-4" />,
 		path: "/become",
+		premium: true, // Premium only
 	},
 	{
 		id: "identity",
 		label: "Manage Identity",
 		icon: <UserCircle className="h-4 w-4" />,
 		path: "/identity",
+		premium: true, // Premium only
 	},
 	{
 		id: "success",
 		label: "Define Success",
 		icon: <Target className="h-4 w-4" />,
 		path: "/success",
+		premium: true, // Premium only
 	},
 	{
 		id: "letgod",
 		label: "Let God Prevail",
 		icon: <Sparkles className="h-4 w-4" />,
 		path: "/letgod",
+		premium: true, // Premium only
 	},
 	{
 		id: "selfreg",
 		label: "Self-Reg",
 		icon: <User className="h-4 w-4" />,
 		path: "/selfreg",
+		premium: true, // Premium only
+	},
+	{
+		id: "insights",
+		label: "Insights",
+		icon: <Brain className="h-4 w-4" />,
+		path: "/",
+		premium: true, // Premium only
 	},
 	{
 		id: "profile",
 		label: "Profile",
 		icon: <User className="h-4 w-4" />,
 		path: "/profile",
+		premium: false, // Free tier
 	},
 ];
 
@@ -95,6 +124,8 @@ export default function SideNav({
 }: Props) {
 	const location = useLocation();
 	const navigate = useNavigate();
+	const { isPremium, isAdmin } = useSubscription();
+	const [showPaywall, setShowPaywall] = useState(false);
 
 	const getActive = () => {
 		if (location.pathname === "/become") return "become";
@@ -115,6 +146,12 @@ export default function SideNav({
 	const currentActive = getActive();
 
 	const handleClick = (item: (typeof items)[0]) => {
+		// Check if premium feature and user doesn't have access
+		if (item.premium && !isPremium && !isAdmin) {
+			setShowPaywall(true);
+			return;
+		}
+
 		// Close mobile menu when navigating
 		if (onMobileMenuClose) {
 			onMobileMenuClose();
@@ -185,6 +222,7 @@ export default function SideNav({
 					<ul className="space-y-2">
 						{items.map((it) => {
 							const isActive = currentActive === it.id;
+							const isLocked = it.premium && !isPremium && !isAdmin;
 							return (
 								<li key={it.id}>
 									<button
@@ -194,14 +232,27 @@ export default function SideNav({
 											isActive
 												? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow"
 												: "app-text-strong hover:app-bg-surface-alt"
-										}`}
+										} ${isLocked ? "opacity-70" : ""}`}
 									>
 										<span className="opacity-90">{it.icon}</span>
 										<span className="flex-1">{it.label}</span>
+										{isLocked && (
+											<Lock className="h-3 w-3 text-muted-foreground" />
+										)}
 									</button>
 								</li>
 							);
 						})}
+						<li>
+							<button
+								type="button"
+								onClick={() => navigate({ to: "/pricing" })}
+								className="flex items-center w-full gap-3 px-3 py-2 rounded-md text-left transition-colors text-sm font-medium app-text-strong hover:app-bg-surface-alt border border-primary/30"
+							>
+								<CreditCard className="h-4 w-4 opacity-90" />
+								<span className="flex-1">Pricing</span>
+							</button>
+						</li>
 					</ul>
 
 					<div className="mt-6 px-3">
@@ -212,6 +263,35 @@ export default function SideNav({
 					</div>
 				</div>
 			</nav>
+
+			{/* Paywall Dialog */}
+			<Dialog open={showPaywall} onOpenChange={setShowPaywall}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5" />
+							Premium Feature
+						</DialogTitle>
+						<DialogDescription>
+							Upgrade to Premium to unlock advanced features like identity management,
+							success tracking, and more!
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter className="flex-col sm:flex-row gap-2">
+						<Button variant="outline" onClick={() => setShowPaywall(false)}>
+							Maybe Later
+						</Button>
+						<Button
+							onClick={() => {
+								setShowPaywall(false);
+								navigate({ to: "/pricing" });
+							}}
+						>
+							View Pricing
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</>
 	);
 }
