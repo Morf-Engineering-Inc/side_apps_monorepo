@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BecomeLog - Sign In</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .auth-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    .logo {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+    
+    .title {
+      font-size: 2rem;
+      color: #333;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: #666;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      background: #f0f4ff;
+      padding: 5px;
+      border-radius: 10px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #666;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .tab.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .form-section {
+      display: none;
+    }
+    
+    .form-section.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    
+    .divider {
+      text-align: center;
+      margin: 25px 0;
+      color: #666;
+      position: relative;
+    }
+    
+    .divider::before,
+    .divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #e0e0e0;
+    }
+    
+    .divider::before {
+      left: 0;
+    }
+    
+    .divider::after {
+      right: 0;
+    }
+    
+    .social-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .social-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .social-btn:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #c33;
+      display: none;
+    }
+    
+    .success-message {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #10b981;
+      display: none;
+    }
+    
+    .link-text {
+      text-align: center;
+      color: #666;
+      margin-top: 20px;
+    }
+    
+    .link-text a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    .link-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="logo">🚀</div>
+    <h1 class="title">BecomeLog</h1>
+    <p class="subtitle">Transform your life, one day at a time</p>
+    
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    
+    <div id="errorMessage" class="error-message"></div>
+    <div id="successMessage" class="success-message"></div>
+    
+    <!-- Sign In Form -->
+    <div id="signinForm" class="form-section active">
+      <form onsubmit="handleSignIn(event)">
+        <div class="form-group">
+          <label class="form-label" for="signin-email">Email</label>
+          <input type="email" id="signin-email" class="form-input" placeholder="your@email.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signin-password">Password</label>
+          <input type="password" id="signin-password" class="form-input" placeholder="••••••••" required>
+        </div>
+        
+        <button type="submit" class="submit-btn" id="signinBtn">Sign In</button>
+      </form>
+      
+      <div class="divider">or</div>
+      
+      <div class="social-btns">
+        <button class="social-btn" onclick="socialSignIn('google')">
+          <span>🔍</span>
+          <span>Continue with Google</span>
+        </button>
+        <button class="social-btn" onclick="socialSignIn('github')">
+          <span>⚙️</span>
+          <span>Continue with GitHub</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Sign Up Form -->
+    <div id="signupForm" class="form-section">
+      <form onsubmit="handleSignUp(event)">
+        <div class="form-group">
+          <label class="form-label" for="signup-name">Full Name</label>
+          <input type="text" id="signup-name" class="form-input" placeholder="John Doe" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email</label>
+          <input type="email" id="signup-email" class="form-input" placeholder="your@email.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signup-password">Password</label>
+          <input type="password" id="signup-password" class="form-input" placeholder="••••••••" minlength="8" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signup-confirm">Confirm Password</label>
+          <input type="password" id="signup-confirm" class="form-input" placeholder="••••••••" minlength="8" required>
+        </div>
+        
+        <button type="submit" class="submit-btn" id="signupBtn">Create Account</button>
+      </form>
+      
+      <div class="divider">or</div>
+      
+      <div class="social-btns">
+        <button class="social-btn" onclick="socialSignIn('google')">
+          <span>🔍</span>
+          <span>Sign up with Google</span>
+        </button>
+        <button class="social-btn" onclick="socialSignIn('github')">
+          <span>⚙️</span>
+          <span>Sign up with GitHub</span>
+        </button>
+      </div>
+    </div>
+    
+    <p class="link-text">
+      <a href="/index.html">← Back to Home</a>
+    </p>
+  </div>
+  
+  <script src="config.js"></script>
+  <script>
+    function switchTab(tab) {
+      // Update tab buttons
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Update form sections
+      const forms = document.querySelectorAll('.form-section');
+      forms.forEach(f => f.classList.remove('active'));
+      
+      if (tab === 'signin') {
+        document.getElementById('signinForm').classList.add('active');
+      } else {
+        document.getElementById('signupForm').classList.add('active');
+      }
+      
+      // Clear messages
+      hideMessages();
+    }
+    
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+    
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      setTimeout(() => {
+        successDiv.style.display = 'none';
+      }, 5000);
+    }
+    
+    function hideMessages() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+    
+    async function handleSignIn(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('signin-email').value;
+      const password = document.getElementById('signin-password').value;
+      const btn = document.getElementById('signinBtn');
+      
+      btn.disabled = true;
+      btn.textContent = 'Signing In...';
+      
+      try {
+        // Call authentication API
+        const apiUrl = window.AWS_CONFIG?.apiUrl || '';
+        const response = await fetch(`${apiUrl}/api/auth/signin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Invalid credentials');
+        }
+        
+        const data = await response.json();
+        
+        // Store auth token
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userEmail', email);
+        
+        // Get redirect URL from query params or default to dashboard
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect') || 'dashboard';
+        
+        // Redirect to intended page
+        window.location.href = `/${redirect}.html`;
+        
+      } catch (error) {
+        console.error('Sign in error:', error);
+        showError('Invalid email or password. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+    
+    async function handleSignUp(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+      const btn = document.getElementById('signupBtn');
+      
+      // Validate password match
+      if (password !== confirm) {
+        showError('Passwords do not match');
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Creating Account...';
+      
+      try {
+        // Call authentication API
+        const apiUrl = window.AWS_CONFIG?.apiUrl || '';
+        const response = await fetch(`${apiUrl}/api/auth/signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, password })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Sign up failed');
+        }
+        
+        const data = await response.json();
+        
+        // Store auth token
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userEmail', email);
+        
+        showSuccess('Account created successfully! Redirecting...');
+        
+        // Redirect to pricing page for new users
+        setTimeout(() => {
+          window.location.href = '/pricing.html';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Sign up error:', error);
+        showError(error.message || 'Failed to create account. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+    
+    function socialSignIn(provider) {
+      // This would integrate with AWS Cognito or other OAuth providers
+      showError(`${provider} sign-in will be available soon!`);
+      
+      // In production, you would redirect to the OAuth provider
+      // Example for Cognito:
+      // const cognitoUrl = `https://${domain}.auth.${region}.amazoncognito.com/oauth2/authorize`;
+      // window.location.href = cognitoUrl + params;
+    }
+  </script>
+</body>
+</html>
