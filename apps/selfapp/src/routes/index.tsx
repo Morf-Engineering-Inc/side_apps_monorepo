@@ -1,3 +1,4 @@
+import { IntegrityDashboard } from "@/components/IntegrityDashboard";
 import { TimeTracker } from "@/components/TimeTracker";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +54,7 @@ function Index() {
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
 		const tabParam = urlParams.get("tab");
-		if (tabParam && ["log", "dashboard", "insights"].includes(tabParam)) {
+		if (tabParam && ["log", "dashboard", "insights", "integrity"].includes(tabParam)) {
 			setActiveTab(tabParam);
 		}
 	}, []);
@@ -81,6 +82,8 @@ function Index() {
 				return <Dashboard />;
 			case "insights":
 				return <Insights />;
+			case "integrity":
+				return <IntegrityDashboard />;
 			default:
 				return <DailyLogForm />;
 		}
