@@ -4,6 +4,7 @@ import {
 	BookOpen,
 	Brain,
 	Calendar,
+	Shield,
 	Sparkles,
 	Target,
 	User,
@@ -37,6 +38,18 @@ const items: {
 		path: "/",
 	},
 	{
+		id: "insights",
+		label: "Insights",
+		icon: <Brain className="h-4 w-4" />,
+		path: "/",
+	},
+	{
+		id: "integrity",
+		label: "Integrity",
+		icon: <Shield className="h-4 w-4" />,
+		path: "/",
+	},
+	{
 		id: "become",
 		label: "Become",
 		icon: <BookOpen className="h-4 w-4" />,
@@ -65,12 +78,6 @@ const items: {
 		label: "Self-Reg",
 		icon: <User className="h-4 w-4" />,
 		path: "/selfreg",
-	},
-	{
-		id: "insights",
-		label: "Insights",
-		icon: <Brain className="h-4 w-4" />,
-		path: "/",
 	},
 	{
 		id: "profile",
@@ -114,7 +121,7 @@ export default function SideNav({
 		}
 
 		if (item.path === "/") {
-			// For main page tabs (log, dashboard, insights)
+			// For main page tabs (log, dashboard, insights, integrity)
 			if (onChange) {
 				onChange(item.id);
 			}
