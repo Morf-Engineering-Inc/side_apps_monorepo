@@ -17,6 +17,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LetgodRouteImport } from './routes/letgod'
 import { Route as JwtDebugRouteImport } from './routes/jwt-debug'
+import { Route as IdentityRouteImport } from './routes/identity'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as BecomeRouteImport } from './routes/become'
@@ -62,6 +63,11 @@ const JwtDebugRoute = JwtDebugRouteImport.update({
   path: '/jwt-debug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IdentityRoute = IdentityRouteImport.update({
+  id: '/identity',
+  path: '/identity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/become': typeof BecomeRoute
   '/callback': typeof CallbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/identity': typeof IdentityRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/become': typeof BecomeRoute
   '/callback': typeof CallbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/identity': typeof IdentityRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/become': typeof BecomeRoute
   '/callback': typeof CallbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/identity': typeof IdentityRoute
   '/jwt-debug': typeof JwtDebugRoute
   '/letgod': typeof LetgodRoute
   '/login': typeof LoginRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/become'
     | '/callback'
     | '/forgot-password'
+    | '/identity'
     | '/jwt-debug'
     | '/letgod'
     | '/login'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/become'
     | '/callback'
     | '/forgot-password'
+    | '/identity'
     | '/jwt-debug'
     | '/letgod'
     | '/login'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/become'
     | '/callback'
     | '/forgot-password'
+    | '/identity'
     | '/jwt-debug'
     | '/letgod'
     | '/login'
@@ -176,6 +188,7 @@ export interface RootRouteChildren {
   BecomeRoute: typeof BecomeRoute
   CallbackRoute: typeof CallbackRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  IdentityRoute: typeof IdentityRoute
   JwtDebugRoute: typeof JwtDebugRoute
   LetgodRoute: typeof LetgodRoute
   LoginRoute: typeof LoginRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JwtDebugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/identity': {
+      id: '/identity'
+      path: '/identity'
+      fullPath: '/identity'
+      preLoaderRoute: typeof IdentityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -280,6 +300,7 @@ const rootRouteChildren: RootRouteChildren = {
   BecomeRoute: BecomeRoute,
   CallbackRoute: CallbackRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  IdentityRoute: IdentityRoute,
   JwtDebugRoute: JwtDebugRoute,
   LetgodRoute: LetgodRoute,
   LoginRoute: LoginRoute,

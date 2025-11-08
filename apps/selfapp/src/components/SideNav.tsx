@@ -7,6 +7,7 @@ import {
 	Sparkles,
 	Target,
 	User,
+	UserCircle,
 } from "lucide-react";
 import type React from "react";
 
@@ -40,6 +41,12 @@ const items: {
 		label: "Become",
 		icon: <BookOpen className="h-4 w-4" />,
 		path: "/become",
+	},
+	{
+		id: "identity",
+		label: "Manage Identity",
+		icon: <UserCircle className="h-4 w-4" />,
+		path: "/identity",
 	},
 	{
 		id: "success",
@@ -84,6 +91,7 @@ export default function SideNav({
 
 	const getActive = () => {
 		if (location.pathname === "/become") return "become";
+		if (location.pathname === "/identity") return "identity";
 		if (location.pathname === "/success") return "success";
 		if (location.pathname === "/selfreg") return "selfreg";
 		if (location.pathname === "/letgod") return "letgod";
