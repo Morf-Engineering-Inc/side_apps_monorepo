@@ -1,14 +1,49 @@
 /**
- * Standalone Authentication Stub
+ * Standalone Authentication Integration
  *
- * This is a simplified auth integration for running outside of CREAO.ai platform.
- * It provides mock authentication for local development with full compatibility.
+ * This authentication module implements JWT-based auth for standalone SPA deployment.
+ * 
+ * SECURITY ARCHITECTURE:
+ * ---------------------
+ * Token Storage:
+ * - Access tokens (15 min): Stored in MEMORY ONLY (AuthIntegration class state)
+ * - Refresh tokens (7 days): Stored in localStorage (compromise for standalone SPA)
+ * 
+ * Security Best Practices:
+ * - Short-lived access tokens minimize exposure window
+ * - Automatic token refresh before expiration (2 min threshold)
+ * - Tokens cleared on logout/error
+ * - PKCE flow for OAuth (prevents authorization code interception)
+ * 
+ * PRODUCTION RECOMMENDATIONS:
+ * --------------------------
+ * For maximum security in production:
+ * 1. Add a thin backend proxy (Lambda@Edge, CloudFront Functions, or API Gateway)
+ * 2. Move token exchange to backend
+ * 3. Store refresh tokens in httpOnly secure cookies (not accessible to JS)
+ * 4. Set SameSite=Strict on cookies
+ * 5. Implement CSRF protection
+ * 
+ * Current Limitations:
+ * - Refresh tokens in localStorage are vulnerable to XSS attacks
+ * - Session doesn't persist across browser restarts without re-authentication
+ * - No protection against CSRF for refresh token usage
+ * 
+ * Trade-offs:
+ * This implementation prioritizes:
+ * - Zero backend infrastructure for standalone deployment
+ * - Automatic token refresh for better UX
+ * - Reasonable security for low-risk applications
+ * 
+ * @see https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation
+ * @see https://datatracker.ietf.org/doc/html/rfc6749#section-10.3
  */
 
 interface AuthState {
 	token: string | null;
 	status: "authenticated" | "unauthenticated" | "invalid_token" | "loading";
 	parentOrigin: string | null;
+	refreshToken?: string | null;
 }
 
 // PKCE Helper Functions
@@ -39,9 +74,11 @@ class AuthIntegration {
 		token: null,
 		status: "unauthenticated",
 		parentOrigin: null,
+		refreshToken: null,
 	};
 
 	private listeners: Set<(state: AuthState) => void> = new Set();
+	private refreshPromise: Promise<string | null> | null = null;
 
 	constructor() {
 		// Configure Cognito from environment variables if available
@@ -71,16 +108,35 @@ class AuthIntegration {
 			}
 		}
 
-		// In standalone mode, check for existing authentication
-		// Prefer a token persisted to localStorage (local dev DB surrogate) when available
+		// Security Note: Access tokens are stored in memory only (not localStorage)
+		// Refresh tokens are stored in localStorage as a compromise for standalone SPA
+		// For production with backend: use httpOnly secure cookies for refresh tokens
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
-				const stored = window.localStorage.getItem("SELFAPP_AUTH_TOKEN");
-				if (stored) {
-					this.state.token = stored;
-					this.state.status = "authenticated";
+				// Only restore refresh token from localStorage
+				const storedRefresh = window.localStorage.getItem(
+					"SELFAPP_REFRESH_TOKEN",
+				);
+				if (storedRefresh) {
+					this.state.refreshToken = storedRefresh;
+					// Set status as loading - will be authenticated after token refresh
+					this.state.status = "loading";
+					// Attempt to refresh token on initialization
+					this.refreshAccessToken()
+						.then((token) => {
+							if (token) {
+								this.state.token = token;
+								this.state.status = "authenticated";
+								this.notifyListeners();
+							} else {
+								this.clearAuth();
+							}
+						})
+						.catch(() => {
+							this.clearAuth();
+						});
 				} else {
-					// Check if there's a user in localStorage (from local auth)
+					// Check if there's a user in localStorage (from local dev auth)
 					const user = window.localStorage.getItem("user");
 					if (user) {
 						this.state.token =
@@ -98,7 +154,9 @@ class AuthIntegration {
 			"Auth status:",
 			this.state.status === "authenticated"
 				? "authenticated (existing session)"
-				: "unauthenticated (login required)",
+				: this.state.status === "loading"
+					? "loading (refreshing token)"
+					: "unauthenticated (login required)",
 		);
 	}
 
@@ -154,10 +212,13 @@ class AuthIntegration {
 			token: null,
 			status: "unauthenticated",
 			parentOrigin: null,
+			refreshToken: null,
 		};
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
+				// Clean up any stored tokens (access token from old versions, refresh token)
 				window.localStorage.removeItem("SELFAPP_AUTH_TOKEN");
+				window.localStorage.removeItem("SELFAPP_REFRESH_TOKEN");
 			}
 		} catch (e) {
 			// ignore
@@ -166,17 +227,156 @@ class AuthIntegration {
 	}
 
 	/**
-	 * Persist an auth token (async-friendly API). Uses localStorage as a simple local DB.
+	 * Refresh access token using refresh token
 	 */
-	public async setAuthTokenAsync(token: string | null): Promise<void> {
+	public async refreshAccessToken(): Promise<string | null> {
+		// If already refreshing, return the existing promise
+		if (this.refreshPromise) {
+			return this.refreshPromise;
+		}
+
+		// Create refresh promise
+		this.refreshPromise = (async () => {
+			try {
+				const refreshToken = this.state.refreshToken;
+				if (!refreshToken) {
+					console.error("No refresh token available");
+					this.clearAuth();
+					return null;
+				}
+
+				const cfg =
+					(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+				const userPoolId =
+					cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+				const clientId =
+					cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+				if (!userPoolId || !clientId) {
+					console.error("Cognito not configured for token refresh");
+					return null;
+				}
+
+				// Extract region from user pool ID
+				const parts = userPoolId.split("_");
+				if (parts.length !== 2) {
+					console.error("Invalid user pool ID format:", userPoolId);
+					return null;
+				}
+				const region = parts[0];
+
+				const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+				const requestBody = {
+					AuthFlow: "REFRESH_TOKEN_AUTH",
+					ClientId: clientId,
+					AuthParameters: {
+						REFRESH_TOKEN: refreshToken,
+					},
+				};
+
+				console.log("Refreshing access token...");
+
+				const response = await fetch(endpoint, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-amz-json-1.1",
+						"X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth",
+					},
+					body: JSON.stringify(requestBody),
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error("Token refresh failed:", response.status, errorText);
+					this.clearAuth();
+					return null;
+				}
+
+				const result = await response.json();
+				console.log("Successfully refreshed access token");
+
+				if (result.AuthenticationResult) {
+					const newToken = result.AuthenticationResult.IdToken;
+					await this.setAuthTokenAsync(newToken);
+					return newToken;
+				}
+
+				return null;
+			} catch (error) {
+				console.error("Error refreshing token:", error);
+				this.clearAuth();
+				return null;
+			} finally {
+				this.refreshPromise = null;
+			}
+		})();
+
+		return this.refreshPromise;
+	}
+
+	/**
+	 * Get auth token, refreshing if necessary
+	 */
+	public async getAuthTokenWithRefresh(): Promise<string | null> {
+		const token = this.getAuthToken();
+		if (!token) {
+			return null;
+		}
+
+		// Check if token is expired or about to expire (within 5 minutes)
+		// by trying to decode it
+		try {
+			const parts = token.split(".");
+			if (parts.length === 3) {
+				const payload = JSON.parse(atob(parts[1]));
+				const exp = payload.exp;
+				if (exp) {
+					const now = Math.floor(Date.now() / 1000);
+					const expiresIn = exp - now;
+					// Refresh if token expires within 2 minutes (since tokens are short-lived)
+					if (expiresIn < 120) {
+						console.log(
+							"Token expiring soon, refreshing...",
+							`expires in ${expiresIn}s`,
+						);
+						return await this.refreshAccessToken();
+					}
+				}
+			}
+		} catch (e) {
+			// If we can't decode the token, just return it as-is
+			console.log("Could not decode token, using as-is");
+		}
+
+		return token;
+	}
+
+	/**
+	 * Set auth tokens (async-friendly API)
+	 * Security: Access tokens stored in memory only. Refresh tokens in localStorage.
+	 * For production: Use httpOnly cookies via backend proxy for refresh tokens.
+	 */
+	public async setAuthTokenAsync(
+		token: string | null,
+		refreshToken?: string | null,
+	): Promise<void> {
+		// Store access token in memory only (not localStorage)
 		this.state.token = token;
+		if (refreshToken !== undefined) {
+			this.state.refreshToken = refreshToken;
+		}
 		this.state.status = token ? "authenticated" : "unauthenticated";
+		
+		// Only persist refresh token to localStorage (access token stays in memory)
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
-				if (token) {
-					window.localStorage.setItem("SELFAPP_AUTH_TOKEN", token);
-				} else {
-					window.localStorage.removeItem("SELFAPP_AUTH_TOKEN");
+				if (refreshToken !== undefined) {
+					if (refreshToken) {
+						window.localStorage.setItem("SELFAPP_REFRESH_TOKEN", refreshToken);
+					} else {
+						window.localStorage.removeItem("SELFAPP_REFRESH_TOKEN");
+					}
 				}
 			}
 		} catch (e) {
@@ -294,7 +494,12 @@ export function createAuthenticatedFetch(): typeof fetch {
 async function authenticateWithPassword(
 	username: string,
 	password: string,
-): Promise<{ idToken?: string; accessToken?: string; error?: string } | null> {
+): Promise<{
+	idToken?: string;
+	accessToken?: string;
+	refreshToken?: string;
+	error?: string;
+} | null> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -392,6 +597,7 @@ async function authenticateWithPassword(
 				return {
 					idToken: result.AuthenticationResult.IdToken,
 					accessToken: result.AuthenticationResult.AccessToken,
+					refreshToken: result.AuthenticationResult.RefreshToken,
 				};
 			}
 
@@ -679,7 +885,11 @@ function parseCodeFromUrl() {
 async function exchangeCodeForTokens(
 	code: string,
 	codeVerifier: string,
-): Promise<{ id_token?: string; access_token?: string } | null> {
+): Promise<{
+	id_token?: string;
+	access_token?: string;
+	refresh_token?: string;
+} | null> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -782,7 +992,10 @@ export function handleCognitoCallback(): Promise<boolean> {
 
 						// Use id_token (contains user info) or access_token as fallback
 						const token = tokens.id_token || tokens.access_token;
-						return authIntegration.setAuthTokenAsync(token as string);
+						return authIntegration.setAuthTokenAsync(
+							token as string,
+							tokens.refresh_token,
+						);
 					})
 					.then(() => {
 						// Clean up URL while preserving non-OAuth query parameters
@@ -842,11 +1055,29 @@ export async function getAuthTokenAsync(): Promise<string | null> {
 }
 
 /**
+ * Get auth token with automatic refresh if needed
+ */
+export async function getAuthTokenWithRefresh(): Promise<string | null> {
+	return authIntegration.getAuthTokenWithRefresh();
+}
+
+/**
  * Async setter for token (keeps previous API)
  */
-export async function setAuthTokenAsync(token: string | null): Promise<void> {
-	return authIntegration.setAuthTokenAsync(token);
+export async function setAuthTokenAsync(
+	token: string | null,
+	refreshToken?: string | null,
+): Promise<void> {
+	return authIntegration.setAuthTokenAsync(token, refreshToken);
 }
+
+/**
+ * Refresh access token using refresh token
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+	return authIntegration.refreshAccessToken();
+}
+
 /**
  * Async-friendly getter for token (compat with callers expecting async API).
  */

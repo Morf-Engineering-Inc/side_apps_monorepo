@@ -4,7 +4,11 @@
  */
 
 import { TokenExpiredError } from "./auth-errors";
-import { getAuthToken } from "./auth-integration";
+import {
+	getAuthToken,
+	getAuthTokenWithRefresh,
+	refreshAccessToken,
+} from "./auth-integration";
 
 // Get API URL from config or environment
 const getApiUrl = (): string => {
@@ -111,18 +115,21 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Make authenticated API request with enhanced error handling
+ * Make authenticated API request with enhanced error handling and automatic token refresh
  */
 async function apiRequest<T>(
 	endpoint: string,
 	options: RequestInit = {},
+	retryCount = 0,
 ): Promise<T> {
 	const apiUrl = getApiUrl();
-	const token = getAuthToken();
 
 	if (!apiUrl) {
 		throw new Error("API URL not configured");
 	}
+
+	// Try to get token with automatic refresh
+	let token = await getAuthTokenWithRefresh();
 
 	if (!token) {
 		throw new Error("No authentication token available");
@@ -144,6 +151,17 @@ async function apiRequest<T>(
 	if (!response.ok) {
 		// Handle 401 Unauthorized specifically (expired or invalid token)
 		if (response.status === 401) {
+			// If this is the first attempt and we have a refresh token, try refreshing
+			if (retryCount === 0) {
+				console.log("Token expired, attempting refresh...");
+				const newToken = await refreshAccessToken();
+				if (newToken) {
+					console.log("Token refreshed successfully, retrying request...");
+					// Retry the request with the new token
+					return apiRequest<T>(endpoint, options, retryCount + 1);
+				}
+			}
+			// If refresh failed or this is a retry, throw token expired error
 			throw new TokenExpiredError();
 		}
 

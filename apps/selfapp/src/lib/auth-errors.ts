@@ -15,7 +15,7 @@ export class AuthenticationError extends Error {
 export class TokenExpiredError extends AuthenticationError {
 	constructor() {
 		super(
-			"⚠ Session expired. Please refresh the page and log in again.",
+			"Your session has expired. Please refresh the page to log in again.",
 			"TOKEN_EXPIRED",
 		);
 		this.name = "TokenExpiredError";
@@ -40,10 +40,10 @@ export function getAuthErrorMessage(error: unknown): string | null {
 	if (error instanceof Error) {
 		const message = error.message;
 		if (message.includes("Invalid or expired token")) {
-			return "⚠ Session expired. Please refresh the page and log in again.";
+			return "Your session has expired. Please refresh the page to log in again.";
 		}
 		if (message.includes("authentication token")) {
-			return "⚠ Authentication required. Please log in.";
+			return "Authentication required. Please log in.";
 		}
 	}
 

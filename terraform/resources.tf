@@ -169,6 +169,19 @@ resource "aws_cognito_user_pool_client" "main" {
 
   prevent_user_existence_errors = "ENABLED"
 
+  # Token validity settings
+  # Access token: 15 minutes (short-lived for security)
+  # ID token: 15 minutes (matches access token)
+  # Refresh token: 7 days (weekly refresh cycle)
+  access_token_validity  = 15
+  id_token_validity      = 15
+  refresh_token_validity = 7
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
+
   # OAuth 2.0 Configuration for Hosted UI
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]

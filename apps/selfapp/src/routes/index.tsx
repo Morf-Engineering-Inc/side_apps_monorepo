@@ -119,13 +119,61 @@ function DailyLogForm() {
 	// Memoize today's date to avoid recreating on every render
 	const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-	// Check if entry exists for the current date
+	// Check if entry exists for the current date and load it
 	useEffect(() => {
 		const checkExistingEntry = async () => {
 			try {
 				const existingEntries = await listDailyLogs();
 				const existingForDate = existingEntries.find((e) => e.date === date);
-				setExistingEntryId(existingForDate?.entryId || null);
+				if (existingForDate) {
+					// Load existing entry data into form
+					setExistingEntryId(existingForDate.entryId || null);
+					setGoals(
+						existingForDate.goals?.length >= 3
+							? existingForDate.goals.slice(0, 3)
+							: [...(existingForDate.goals || []), "", "", ""].slice(0, 3),
+					);
+					setExecutionNotes(existingForDate.execution_notes || "");
+					setTasks(existingForDate.tasks || []);
+					setFocusRating([existingForDate.focus_rating || 5]);
+					setEnergyRating([existingForDate.energy_rating || 5]);
+					setMotivation([existingForDate.motivation || 3]);
+					setAnxiety([existingForDate.anxiety || 3]);
+					setConfidence([existingForDate.confidence || 3]);
+					setDifficulties(existingForDate.difficulties || "");
+					setPerformanceScore([existingForDate.performance_score || 5]);
+					setWinLose(existingForDate.win_lose ?? true);
+					setReasoning(existingForDate.reasoning || "");
+					setImprovementNotes(existingForDate.improvement_notes || "");
+					setStrengths(
+						existingForDate.strengths?.length >= 3
+							? existingForDate.strengths.slice(0, 3)
+							: [...(existingForDate.strengths || []), "", "", ""].slice(0, 3),
+					);
+					setNeedsImprovement(
+						existingForDate.scorecard?.needs_improvement || "",
+					);
+					setSaveMessage("Loaded existing entry for this date");
+					setTimeout(() => setSaveMessage(""), 2000);
+				} else {
+					// Reset form for new entry
+					setExistingEntryId(null);
+					setGoals(["", "", ""]);
+					setExecutionNotes("");
+					setTasks([]);
+					setFocusRating([5]);
+					setEnergyRating([5]);
+					setMotivation([3]);
+					setAnxiety([3]);
+					setConfidence([3]);
+					setDifficulties("");
+					setPerformanceScore([5]);
+					setWinLose(true);
+					setReasoning("");
+					setImprovementNotes("");
+					setStrengths(["", "", ""]);
+					setNeedsImprovement("");
+				}
 			} catch (error) {
 				console.error("Error checking existing entry:", error);
 			}
@@ -218,16 +266,25 @@ function DailyLogForm() {
 				},
 			};
 
-			// Check if entry for this date already exists
+			// Check if entry for this date already exists (double-check for race conditions)
 			const existingEntries = await listDailyLogs();
 			const existingForDate = existingEntries.find((e) => e.date === date);
 
-			if (existingForDate?.entryId) {
-				await updateDailyLog(existingForDate.entryId, logEntry);
+			// Use found entry ID or the one from state
+			const entryIdToUpdate = existingForDate?.entryId || existingEntryId;
+
+			if (entryIdToUpdate) {
+				await updateDailyLog(entryIdToUpdate, logEntry);
 				setSaveMessage("Entry updated successfully!");
+				// Update state to track this entry ID
+				setExistingEntryId(entryIdToUpdate);
 			} else {
-				await createDailyLog(logEntry);
+				const createdEntry = await createDailyLog(logEntry);
 				setSaveMessage("Entry saved successfully!");
+				// Track the newly created entry ID
+				if (createdEntry?.entryId) {
+					setExistingEntryId(createdEntry.entryId);
+				}
 			}
 
 			setTimeout(() => setSaveMessage(""), 3000);
