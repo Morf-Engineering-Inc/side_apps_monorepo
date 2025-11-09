@@ -83,3 +83,21 @@ output "stripe_public_key" {
   value       = var.stripe_live_public_key
   sensitive   = false
 }
+
+output "stripe_price_monthly" {
+  description = "Stripe Price ID for monthly subscription"
+  value       = var.stripe_price_monthly
+  sensitive   = false
+}
+
+output "stripe_price_yearly" {
+  description = "Stripe Price ID for yearly subscription"
+  value       = var.stripe_price_yearly
+  sensitive   = false
+}
+
+output "stripe_price_lifetime" {
+  description = "Stripe Price ID for lifetime subscription"
+  value       = var.stripe_price_lifetime
+  sensitive   = false
+}

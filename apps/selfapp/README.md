@@ -102,8 +102,44 @@ The original CREAO.ai integration files are backed up as `*.creao.bak` files.
 Create a `.env.local` file for local configuration:
 
 ```env
-VITE_API_BASE_PATH=http://localhost:3000/api
+# API Configuration
+VITE_API_URL=https://your-api-gateway-url.execute-api.us-east-1.amazonaws.com
+
+# Cognito Configuration (optional for local dev)
+VITE_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
+VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+VITE_COGNITO_DOMAIN=your-domain.auth.us-east-1.amazoncognito.com
+
+# Stripe Configuration
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxxxxxxxxxxxxx
+VITE_STRIPE_PRICE_MONTHLY=price_1xxxxxxxxxxxxxxxxxxxxxxxxx
+VITE_STRIPE_PRICE_YEARLY=price_1xxxxxxxxxxxxxxxxxxxxxxxxx
+VITE_STRIPE_PRICE_LIFETIME=price_1xxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+
+### Setting up Stripe
+
+1. Create a Stripe account at https://stripe.com
+2. Create products and prices in the Stripe Dashboard
+3. Copy the Price IDs (they start with `price_1...`)
+4. Add the Price IDs to your environment variables or GitHub Secrets
+5. Configure the following GitHub Secrets for deployment:
+   - `STRIPE_LIVE_SECRET_KEY` - Stripe secret key (sk_live_...)
+   - `STRIPE_LIVE_PUBLIC_KEY` - Stripe publishable key (pk_live_...)
+   - `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
+   - `STRIPE_PRICE_MONTHLY` - Monthly subscription Price ID
+   - `STRIPE_PRICE_YEARLY` - Yearly subscription Price ID
+   - `STRIPE_PRICE_LIFETIME` - Lifetime subscription Price ID
+   - `STRIPE_ACCT_ID` - Stripe account ID (optional)
+
+### Price Configuration
+
+The pricing page supports three subscription tiers:
+- **Monthly**: $4.99/month
+- **Yearly**: $44/year (26% savings)
+- **Lifetime**: $175 one-time payment
+
+Update the prices in `src/routes/pricing.tsx` if you need different pricing.
 
 ## Contributing
 
