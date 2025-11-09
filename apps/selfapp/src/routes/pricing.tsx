@@ -232,7 +232,7 @@ function PricingPage() {
 							<p className="text-sm text-muted-foreground">
 								{isPremium
 									? "Thank you for being a premium member!"
-									: "You are currently on the free plan"}
+									: "Welcome! You're on the free plan. Upgrade to unlock all features."}
 							</p>
 						</div>
 					</div>

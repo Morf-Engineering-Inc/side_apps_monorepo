@@ -91,3 +91,6 @@ out/
 *.tfvars
 .terraformrc
 terraform.rc
+
+# Agent temporary files
+agent/
