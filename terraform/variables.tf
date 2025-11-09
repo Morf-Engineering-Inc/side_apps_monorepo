@@ -65,3 +65,21 @@ variable "stripe_account_id" {
   type        = string
   default     = ""
 }
+
+variable "stripe_price_monthly" {
+  description = "Stripe Price ID for monthly subscription"
+  type        = string
+  default     = ""
+}
+
+variable "stripe_price_yearly" {
+  description = "Stripe Price ID for yearly subscription"
+  type        = string
+  default     = ""
+}
+
+variable "stripe_price_lifetime" {
+  description = "Stripe Price ID for lifetime subscription"
+  type        = string
+  default     = ""
+}

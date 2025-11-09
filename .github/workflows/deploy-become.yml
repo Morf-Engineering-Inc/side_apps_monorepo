@@ -213,6 +213,9 @@ jobs:
           TF_VAR_stripe_webhook_secret: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           TF_VAR_stripe_live_public_key: ${{ secrets.STRIPE_LIVE_PUBLIC_KEY }}
           TF_VAR_stripe_account_id: ${{ secrets.STRIPE_ACCT_ID }}
+          TF_VAR_stripe_price_monthly: ${{ secrets.STRIPE_PRICE_MONTHLY }}
+          TF_VAR_stripe_price_yearly: ${{ secrets.STRIPE_PRICE_YEARLY }}
+          TF_VAR_stripe_price_lifetime: ${{ secrets.STRIPE_PRICE_LIFETIME }}
 
       - name: Terraform Plan
         id: plan
@@ -226,6 +229,9 @@ jobs:
           TF_VAR_stripe_webhook_secret: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           TF_VAR_stripe_live_public_key: ${{ secrets.STRIPE_LIVE_PUBLIC_KEY }}
           TF_VAR_stripe_account_id: ${{ secrets.STRIPE_ACCT_ID }}
+          TF_VAR_stripe_price_monthly: ${{ secrets.STRIPE_PRICE_MONTHLY }}
+          TF_VAR_stripe_price_yearly: ${{ secrets.STRIPE_PRICE_YEARLY }}
+          TF_VAR_stripe_price_lifetime: ${{ secrets.STRIPE_PRICE_LIFETIME }}
 
       - name: Terraform Apply
         if: ${{ success() }}
@@ -239,6 +245,9 @@ jobs:
           TF_VAR_stripe_webhook_secret: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           TF_VAR_stripe_live_public_key: ${{ secrets.STRIPE_LIVE_PUBLIC_KEY }}
           TF_VAR_stripe_account_id: ${{ secrets.STRIPE_ACCT_ID }}
+          TF_VAR_stripe_price_monthly: ${{ secrets.STRIPE_PRICE_MONTHLY }}
+          TF_VAR_stripe_price_yearly: ${{ secrets.STRIPE_PRICE_YEARLY }}
+          TF_VAR_stripe_price_lifetime: ${{ secrets.STRIPE_PRICE_LIFETIME }}
 
       - name: Get Terraform Outputs
         id: tf_outputs
@@ -251,6 +260,10 @@ jobs:
           echo "cognito_client_id=$(terraform output -raw cognito_client_id)" >> $GITHUB_OUTPUT
           echo "cognito_domain=$(terraform output -raw cognito_domain)" >> $GITHUB_OUTPUT
           echo "custom_domain_url=$(terraform output -raw custom_domain_url)" >> $GITHUB_OUTPUT
+          echo "stripe_public_key=$(terraform output -raw stripe_public_key)" >> $GITHUB_OUTPUT
+          echo "stripe_price_monthly=$(terraform output -raw stripe_price_monthly)" >> $GITHUB_OUTPUT
+          echo "stripe_price_yearly=$(terraform output -raw stripe_price_yearly)" >> $GITHUB_OUTPUT
+          echo "stripe_price_lifetime=$(terraform output -raw stripe_price_lifetime)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
 
       - name: Display DNS Setup Instructions
@@ -351,7 +364,10 @@ jobs:
             redirectSignOut: '${{ steps.tf_outputs.outputs.custom_domain_url }}/',
             responseType: 'code',
             scopes: ['openid', 'email', 'profile'],
-            stripePublicKey: '${{ steps.tf_outputs.outputs.stripe_public_key }}'
+            stripePublicKey: '${{ steps.tf_outputs.outputs.stripe_public_key }}',
+            stripePriceMonthly: '${{ steps.tf_outputs.outputs.stripe_price_monthly }}',
+            stripePriceYearly: '${{ steps.tf_outputs.outputs.stripe_price_yearly }}',
+            stripePriceLifetime: '${{ steps.tf_outputs.outputs.stripe_price_lifetime }}'
           };
           EOF
 

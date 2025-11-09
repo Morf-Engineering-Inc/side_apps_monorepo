@@ -32,6 +32,28 @@ interface PricingTier {
 
 // NOTE: Replace these with your actual Stripe Price IDs from your Stripe Dashboard
 // These should be in the format: price_1xxxxxxxxxxxxxxxxxxxxxxxxx
+// Priority: 1. Runtime config from AWS, 2. Environment variables, 3. Fallback values
+const getStripePriceId = (tier: 'monthly' | 'yearly' | 'lifetime'): string => {
+	const config = (window as any).AWS_CONFIG;
+	
+	switch (tier) {
+		case 'monthly':
+			return config?.stripePriceMonthly || 
+				   import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 
+				   'price_monthly';
+		case 'yearly':
+			return config?.stripePriceYearly || 
+				   import.meta.env.VITE_STRIPE_PRICE_YEARLY || 
+				   'price_yearly';
+		case 'lifetime':
+			return config?.stripePriceLifetime || 
+				   import.meta.env.VITE_STRIPE_PRICE_LIFETIME || 
+				   'price_lifetime';
+		default:
+			return '';
+	}
+};
+
 const pricingTiers: PricingTier[] = [
 	{
 		id: "free",
@@ -54,8 +76,7 @@ const pricingTiers: PricingTier[] = [
 		period: "per month",
 		description: "Full access to all features",
 		icon: <Zap className="h-6 w-6" />,
-		// TODO: Replace with actual Stripe Price ID (e.g., price_1Xxxxxxxxxxxxxxxxxxxxxxxx)
-		stripePriceId: import.meta.env.VITE_STRIPE_PRICE_MONTHLY || "price_monthly",
+		stripePriceId: getStripePriceId('monthly'),
 		features: [
 			"Everything in Free",
 			"Full dashboard access",
@@ -74,8 +95,7 @@ const pricingTiers: PricingTier[] = [
 		icon: <Crown className="h-6 w-6" />,
 		highlighted: true,
 		badge: "BEST VALUE",
-		// TODO: Replace with actual Stripe Price ID (e.g., price_1Xxxxxxxxxxxxxxxxxxxxxxxx)
-		stripePriceId: import.meta.env.VITE_STRIPE_PRICE_YEARLY || "price_yearly",
+		stripePriceId: getStripePriceId('yearly'),
 		features: [
 			"Everything in Monthly",
 			"Save 26% annually",
@@ -92,8 +112,7 @@ const pricingTiers: PricingTier[] = [
 		period: "one-time payment",
 		description: "Lifetime access to all features",
 		icon: <Crown className="h-6 w-6" />,
-		// TODO: Replace with actual Stripe Price ID (e.g., price_1Xxxxxxxxxxxxxxxxxxxxxxxx)
-		stripePriceId: import.meta.env.VITE_STRIPE_PRICE_LIFETIME || "price_lifetime",
+		stripePriceId: getStripePriceId('lifetime'),
 		features: [
 			"Everything in Yearly",
 			"Lifetime access",
