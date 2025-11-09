@@ -131,7 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			}
 			if (result && (result.idToken || result.accessToken)) {
 				const token = result.idToken || result.accessToken;
-				await setAuthTokenAsync(token as string);
+				await setAuthTokenAsync(
+					token as string,
+					result.refreshToken as string | undefined,
+				);
 
 				// Decode token and set user
 				// Security Note: User profile data (id, email, name) is stored in localStorage

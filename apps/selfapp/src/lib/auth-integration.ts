@@ -9,6 +9,7 @@ interface AuthState {
 	token: string | null;
 	status: "authenticated" | "unauthenticated" | "invalid_token" | "loading";
 	parentOrigin: string | null;
+	refreshToken?: string | null;
 }
 
 // PKCE Helper Functions
@@ -39,9 +40,11 @@ class AuthIntegration {
 		token: null,
 		status: "unauthenticated",
 		parentOrigin: null,
+		refreshToken: null,
 	};
 
 	private listeners: Set<(state: AuthState) => void> = new Set();
+	private refreshPromise: Promise<string | null> | null = null;
 
 	constructor() {
 		// Configure Cognito from environment variables if available
@@ -76,8 +79,12 @@ class AuthIntegration {
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
 				const stored = window.localStorage.getItem("SELFAPP_AUTH_TOKEN");
+				const storedRefresh = window.localStorage.getItem(
+					"SELFAPP_REFRESH_TOKEN",
+				);
 				if (stored) {
 					this.state.token = stored;
+					this.state.refreshToken = storedRefresh;
 					this.state.status = "authenticated";
 				} else {
 					// Check if there's a user in localStorage (from local auth)
@@ -154,10 +161,12 @@ class AuthIntegration {
 			token: null,
 			status: "unauthenticated",
 			parentOrigin: null,
+			refreshToken: null,
 		};
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
 				window.localStorage.removeItem("SELFAPP_AUTH_TOKEN");
+				window.localStorage.removeItem("SELFAPP_REFRESH_TOKEN");
 			}
 		} catch (e) {
 			// ignore
@@ -166,10 +175,142 @@ class AuthIntegration {
 	}
 
 	/**
+	 * Refresh access token using refresh token
+	 */
+	public async refreshAccessToken(): Promise<string | null> {
+		// If already refreshing, return the existing promise
+		if (this.refreshPromise) {
+			return this.refreshPromise;
+		}
+
+		// Create refresh promise
+		this.refreshPromise = (async () => {
+			try {
+				const refreshToken = this.state.refreshToken;
+				if (!refreshToken) {
+					console.error("No refresh token available");
+					this.clearAuth();
+					return null;
+				}
+
+				const cfg =
+					(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+				const userPoolId =
+					cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
+				const clientId =
+					cfg.cognitoClientId || cfg.cognito_client_id || cfg.clientId;
+
+				if (!userPoolId || !clientId) {
+					console.error("Cognito not configured for token refresh");
+					return null;
+				}
+
+				// Extract region from user pool ID
+				const parts = userPoolId.split("_");
+				if (parts.length !== 2) {
+					console.error("Invalid user pool ID format:", userPoolId);
+					return null;
+				}
+				const region = parts[0];
+
+				const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
+
+				const requestBody = {
+					AuthFlow: "REFRESH_TOKEN_AUTH",
+					ClientId: clientId,
+					AuthParameters: {
+						REFRESH_TOKEN: refreshToken,
+					},
+				};
+
+				console.log("Refreshing access token...");
+
+				const response = await fetch(endpoint, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-amz-json-1.1",
+						"X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth",
+					},
+					body: JSON.stringify(requestBody),
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error("Token refresh failed:", response.status, errorText);
+					this.clearAuth();
+					return null;
+				}
+
+				const result = await response.json();
+				console.log("Successfully refreshed access token");
+
+				if (result.AuthenticationResult) {
+					const newToken = result.AuthenticationResult.IdToken;
+					await this.setAuthTokenAsync(newToken);
+					return newToken;
+				}
+
+				return null;
+			} catch (error) {
+				console.error("Error refreshing token:", error);
+				this.clearAuth();
+				return null;
+			} finally {
+				this.refreshPromise = null;
+			}
+		})();
+
+		return this.refreshPromise;
+	}
+
+	/**
+	 * Get auth token, refreshing if necessary
+	 */
+	public async getAuthTokenWithRefresh(): Promise<string | null> {
+		const token = this.getAuthToken();
+		if (!token) {
+			return null;
+		}
+
+		// Check if token is expired or about to expire (within 5 minutes)
+		// by trying to decode it
+		try {
+			const parts = token.split(".");
+			if (parts.length === 3) {
+				const payload = JSON.parse(atob(parts[1]));
+				const exp = payload.exp;
+				if (exp) {
+					const now = Math.floor(Date.now() / 1000);
+					const expiresIn = exp - now;
+					// Refresh if token expires within 5 minutes
+					if (expiresIn < 300) {
+						console.log(
+							"Token expiring soon, refreshing...",
+							`expires in ${expiresIn}s`,
+						);
+						return await this.refreshAccessToken();
+					}
+				}
+			}
+		} catch (e) {
+			// If we can't decode the token, just return it as-is
+			console.log("Could not decode token, using as-is");
+		}
+
+		return token;
+	}
+
+	/**
 	 * Persist an auth token (async-friendly API). Uses localStorage as a simple local DB.
 	 */
-	public async setAuthTokenAsync(token: string | null): Promise<void> {
+	public async setAuthTokenAsync(
+		token: string | null,
+		refreshToken?: string | null,
+	): Promise<void> {
 		this.state.token = token;
+		if (refreshToken !== undefined) {
+			this.state.refreshToken = refreshToken;
+		}
 		this.state.status = token ? "authenticated" : "unauthenticated";
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
@@ -177,6 +318,13 @@ class AuthIntegration {
 					window.localStorage.setItem("SELFAPP_AUTH_TOKEN", token);
 				} else {
 					window.localStorage.removeItem("SELFAPP_AUTH_TOKEN");
+				}
+				if (refreshToken !== undefined) {
+					if (refreshToken) {
+						window.localStorage.setItem("SELFAPP_REFRESH_TOKEN", refreshToken);
+					} else {
+						window.localStorage.removeItem("SELFAPP_REFRESH_TOKEN");
+					}
 				}
 			}
 		} catch (e) {
@@ -294,7 +442,12 @@ export function createAuthenticatedFetch(): typeof fetch {
 async function authenticateWithPassword(
 	username: string,
 	password: string,
-): Promise<{ idToken?: string; accessToken?: string; error?: string } | null> {
+): Promise<{
+	idToken?: string;
+	accessToken?: string;
+	refreshToken?: string;
+	error?: string;
+} | null> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -392,6 +545,7 @@ async function authenticateWithPassword(
 				return {
 					idToken: result.AuthenticationResult.IdToken,
 					accessToken: result.AuthenticationResult.AccessToken,
+					refreshToken: result.AuthenticationResult.RefreshToken,
 				};
 			}
 
@@ -679,7 +833,11 @@ function parseCodeFromUrl() {
 async function exchangeCodeForTokens(
 	code: string,
 	codeVerifier: string,
-): Promise<{ id_token?: string; access_token?: string } | null> {
+): Promise<{
+	id_token?: string;
+	access_token?: string;
+	refresh_token?: string;
+} | null> {
 	try {
 		const cfg =
 			(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
@@ -782,7 +940,10 @@ export function handleCognitoCallback(): Promise<boolean> {
 
 						// Use id_token (contains user info) or access_token as fallback
 						const token = tokens.id_token || tokens.access_token;
-						return authIntegration.setAuthTokenAsync(token as string);
+						return authIntegration.setAuthTokenAsync(
+							token as string,
+							tokens.refresh_token,
+						);
 					})
 					.then(() => {
 						// Clean up URL while preserving non-OAuth query parameters
@@ -842,11 +1003,29 @@ export async function getAuthTokenAsync(): Promise<string | null> {
 }
 
 /**
+ * Get auth token with automatic refresh if needed
+ */
+export async function getAuthTokenWithRefresh(): Promise<string | null> {
+	return authIntegration.getAuthTokenWithRefresh();
+}
+
+/**
  * Async setter for token (keeps previous API)
  */
-export async function setAuthTokenAsync(token: string | null): Promise<void> {
-	return authIntegration.setAuthTokenAsync(token);
+export async function setAuthTokenAsync(
+	token: string | null,
+	refreshToken?: string | null,
+): Promise<void> {
+	return authIntegration.setAuthTokenAsync(token, refreshToken);
 }
+
+/**
+ * Refresh access token using refresh token
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+	return authIntegration.refreshAccessToken();
+}
+
 /**
  * Async-friendly getter for token (compat with callers expecting async API).
  */
