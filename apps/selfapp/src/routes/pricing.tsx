@@ -215,26 +215,32 @@ function PricingPage() {
 				</Card>
 			)}
 
-			{isPremium && (
-				<Card className="mb-8 border-primary bg-primary/5">
-					<CardContent className="flex items-center justify-between p-6">
-						<div className="flex items-center gap-4">
+			<Card
+				className={`mb-8 ${isPremium ? "border-primary bg-primary/5" : "border-muted bg-muted/5"}`}
+			>
+				<CardContent className="flex items-center justify-between p-6">
+					<div className="flex items-center gap-4">
+						{isPremium ? (
 							<Crown className="h-8 w-8 text-primary" />
-							<div>
-								<h3 className="font-semibold">
-									Current Plan: {subscription.tier}
-								</h3>
-								<p className="text-sm text-muted-foreground">
-									Thank you for being a premium member!
-								</p>
-							</div>
+						) : (
+							<Sparkles className="h-8 w-8 text-green-500" />
+						)}
+						<div>
+							<h3 className="font-semibold">
+								Current Plan: {subscription.tier}
+							</h3>
+							<p className="text-sm text-muted-foreground">
+								{isPremium
+									? "Thank you for being a premium member!"
+									: "Welcome! You're on the free plan. Upgrade to unlock all features."}
+							</p>
 						</div>
-						<Button variant="outline" onClick={() => navigate({ to: "/" })}>
-							Go to Dashboard
-						</Button>
-					</CardContent>
-				</Card>
-			)}
+					</div>
+					<Button variant="outline" onClick={() => navigate({ to: "/" })}>
+						Go to Dashboard
+					</Button>
+				</CardContent>
+			</Card>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 				{pricingTiers.map((tier) => (
