@@ -170,11 +170,12 @@ resource "aws_cognito_user_pool_client" "main" {
   prevent_user_existence_errors = "ENABLED"
 
   # Token validity settings
-  # Access token: 30 minutes (for frequent writing sessions)
-  # Refresh token: 30 days (monthly check-in)
-  access_token_validity  = 30
-  id_token_validity      = 30
-  refresh_token_validity = 30
+  # Access token: 15 minutes (short-lived for security)
+  # ID token: 15 minutes (matches access token)
+  # Refresh token: 7 days (weekly refresh cycle)
+  access_token_validity  = 15
+  id_token_validity      = 15
+  refresh_token_validity = 7
   token_validity_units {
     access_token  = "minutes"
     id_token      = "minutes"

@@ -1,8 +1,42 @@
 /**
- * Standalone Authentication Stub
+ * Standalone Authentication Integration
  *
- * This is a simplified auth integration for running outside of CREAO.ai platform.
- * It provides mock authentication for local development with full compatibility.
+ * This authentication module implements JWT-based auth for standalone SPA deployment.
+ * 
+ * SECURITY ARCHITECTURE:
+ * ---------------------
+ * Token Storage:
+ * - Access tokens (15 min): Stored in MEMORY ONLY (AuthIntegration class state)
+ * - Refresh tokens (7 days): Stored in localStorage (compromise for standalone SPA)
+ * 
+ * Security Best Practices:
+ * - Short-lived access tokens minimize exposure window
+ * - Automatic token refresh before expiration (2 min threshold)
+ * - Tokens cleared on logout/error
+ * - PKCE flow for OAuth (prevents authorization code interception)
+ * 
+ * PRODUCTION RECOMMENDATIONS:
+ * --------------------------
+ * For maximum security in production:
+ * 1. Add a thin backend proxy (Lambda@Edge, CloudFront Functions, or API Gateway)
+ * 2. Move token exchange to backend
+ * 3. Store refresh tokens in httpOnly secure cookies (not accessible to JS)
+ * 4. Set SameSite=Strict on cookies
+ * 5. Implement CSRF protection
+ * 
+ * Current Limitations:
+ * - Refresh tokens in localStorage are vulnerable to XSS attacks
+ * - Session doesn't persist across browser restarts without re-authentication
+ * - No protection against CSRF for refresh token usage
+ * 
+ * Trade-offs:
+ * This implementation prioritizes:
+ * - Zero backend infrastructure for standalone deployment
+ * - Automatic token refresh for better UX
+ * - Reasonable security for low-risk applications
+ * 
+ * @see https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation
+ * @see https://datatracker.ietf.org/doc/html/rfc6749#section-10.3
  */
 
 interface AuthState {
@@ -74,20 +108,35 @@ class AuthIntegration {
 			}
 		}
 
-		// In standalone mode, check for existing authentication
-		// Prefer a token persisted to localStorage (local dev DB surrogate) when available
+		// Security Note: Access tokens are stored in memory only (not localStorage)
+		// Refresh tokens are stored in localStorage as a compromise for standalone SPA
+		// For production with backend: use httpOnly secure cookies for refresh tokens
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
-				const stored = window.localStorage.getItem("SELFAPP_AUTH_TOKEN");
+				// Only restore refresh token from localStorage
 				const storedRefresh = window.localStorage.getItem(
 					"SELFAPP_REFRESH_TOKEN",
 				);
-				if (stored) {
-					this.state.token = stored;
+				if (storedRefresh) {
 					this.state.refreshToken = storedRefresh;
-					this.state.status = "authenticated";
+					// Set status as loading - will be authenticated after token refresh
+					this.state.status = "loading";
+					// Attempt to refresh token on initialization
+					this.refreshAccessToken()
+						.then((token) => {
+							if (token) {
+								this.state.token = token;
+								this.state.status = "authenticated";
+								this.notifyListeners();
+							} else {
+								this.clearAuth();
+							}
+						})
+						.catch(() => {
+							this.clearAuth();
+						});
 				} else {
-					// Check if there's a user in localStorage (from local auth)
+					// Check if there's a user in localStorage (from local dev auth)
 					const user = window.localStorage.getItem("user");
 					if (user) {
 						this.state.token =
@@ -105,7 +154,9 @@ class AuthIntegration {
 			"Auth status:",
 			this.state.status === "authenticated"
 				? "authenticated (existing session)"
-				: "unauthenticated (login required)",
+				: this.state.status === "loading"
+					? "loading (refreshing token)"
+					: "unauthenticated (login required)",
 		);
 	}
 
@@ -165,6 +216,7 @@ class AuthIntegration {
 		};
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
+				// Clean up any stored tokens (access token from old versions, refresh token)
 				window.localStorage.removeItem("SELFAPP_AUTH_TOKEN");
 				window.localStorage.removeItem("SELFAPP_REFRESH_TOKEN");
 			}
@@ -282,8 +334,8 @@ class AuthIntegration {
 				if (exp) {
 					const now = Math.floor(Date.now() / 1000);
 					const expiresIn = exp - now;
-					// Refresh if token expires within 5 minutes
-					if (expiresIn < 300) {
+					// Refresh if token expires within 2 minutes (since tokens are short-lived)
+					if (expiresIn < 120) {
 						console.log(
 							"Token expiring soon, refreshing...",
 							`expires in ${expiresIn}s`,
@@ -301,24 +353,24 @@ class AuthIntegration {
 	}
 
 	/**
-	 * Persist an auth token (async-friendly API). Uses localStorage as a simple local DB.
+	 * Set auth tokens (async-friendly API)
+	 * Security: Access tokens stored in memory only. Refresh tokens in localStorage.
+	 * For production: Use httpOnly cookies via backend proxy for refresh tokens.
 	 */
 	public async setAuthTokenAsync(
 		token: string | null,
 		refreshToken?: string | null,
 	): Promise<void> {
+		// Store access token in memory only (not localStorage)
 		this.state.token = token;
 		if (refreshToken !== undefined) {
 			this.state.refreshToken = refreshToken;
 		}
 		this.state.status = token ? "authenticated" : "unauthenticated";
+		
+		// Only persist refresh token to localStorage (access token stays in memory)
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
-				if (token) {
-					window.localStorage.setItem("SELFAPP_AUTH_TOKEN", token);
-				} else {
-					window.localStorage.removeItem("SELFAPP_AUTH_TOKEN");
-				}
 				if (refreshToken !== undefined) {
 					if (refreshToken) {
 						window.localStorage.setItem("SELFAPP_REFRESH_TOKEN", refreshToken);
