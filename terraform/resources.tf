@@ -383,7 +383,6 @@ resource "aws_lambda_function" "stripe_handler" {
       ENTRIES_TABLE_NAME    = aws_dynamodb_table.entries.name
       USER_POOL_ID          = aws_cognito_user_pool.main.id
       CLIENT_ID             = aws_cognito_user_pool_client.main.id
-      AWS_REGION            = var.aws_region
       STRIPE_SECRET_KEY     = var.stripe_live_secret_key
       STRIPE_WEBHOOK_SECRET = var.stripe_webhook_secret
       STRIPE_ACCOUNT_ID     = var.stripe_account_id

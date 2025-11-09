@@ -14,10 +14,9 @@ const {
 // Environment variables
 const USER_POOL_ID = process.env.USER_POOL_ID;
 const CLIENT_ID = process.env.CLIENT_ID;
-const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 
-// Initialize Cognito client
-const cognitoClient = new CognitoIdentityProviderClient({ region: AWS_REGION });
+// Initialize Cognito client (region is automatically detected from Lambda environment)
+const cognitoClient = new CognitoIdentityProviderClient({});
 
 /**
  * Create standard API response
