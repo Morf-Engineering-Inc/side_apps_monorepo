@@ -23,9 +23,7 @@ describe("Identity Route", () => {
 
 	it("should render massive action commitments section", () => {
 		render(<RouteComponent />);
-		expect(
-			screen.getByText("Massive Action Commitments"),
-		).toBeInTheDocument();
+		expect(screen.getByText("Massive Action Commitments")).toBeInTheDocument();
 	});
 
 	it("should render default identity statements", () => {

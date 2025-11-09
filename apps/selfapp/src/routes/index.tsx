@@ -54,7 +54,10 @@ function Index() {
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
 		const tabParam = urlParams.get("tab");
-		if (tabParam && ["log", "dashboard", "insights", "integrity"].includes(tabParam)) {
+		if (
+			tabParam &&
+			["log", "dashboard", "insights", "integrity"].includes(tabParam)
+		) {
 			setActiveTab(tabParam);
 		}
 	}, []);

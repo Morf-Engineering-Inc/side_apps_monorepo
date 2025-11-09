@@ -33,24 +33,30 @@ interface PricingTier {
 // NOTE: Replace these with your actual Stripe Price IDs from your Stripe Dashboard
 // These should be in the format: price_1xxxxxxxxxxxxxxxxxxxxxxxxx
 // Priority: 1. Runtime config from AWS, 2. Environment variables, 3. Fallback values
-const getStripePriceId = (tier: 'monthly' | 'yearly' | 'lifetime'): string => {
+const getStripePriceId = (tier: "monthly" | "yearly" | "lifetime"): string => {
 	const config = (window as any).AWS_CONFIG;
-	
+
 	switch (tier) {
-		case 'monthly':
-			return config?.stripePriceMonthly || 
-				   import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 
-				   'price_monthly';
-		case 'yearly':
-			return config?.stripePriceYearly || 
-				   import.meta.env.VITE_STRIPE_PRICE_YEARLY || 
-				   'price_yearly';
-		case 'lifetime':
-			return config?.stripePriceLifetime || 
-				   import.meta.env.VITE_STRIPE_PRICE_LIFETIME || 
-				   'price_lifetime';
+		case "monthly":
+			return (
+				config?.stripePriceMonthly ||
+				import.meta.env.VITE_STRIPE_PRICE_MONTHLY ||
+				"price_monthly"
+			);
+		case "yearly":
+			return (
+				config?.stripePriceYearly ||
+				import.meta.env.VITE_STRIPE_PRICE_YEARLY ||
+				"price_yearly"
+			);
+		case "lifetime":
+			return (
+				config?.stripePriceLifetime ||
+				import.meta.env.VITE_STRIPE_PRICE_LIFETIME ||
+				"price_lifetime"
+			);
 		default:
-			return '';
+			return "";
 	}
 };
 
@@ -76,7 +82,7 @@ const pricingTiers: PricingTier[] = [
 		period: "per month",
 		description: "Full access to all features",
 		icon: <Zap className="h-6 w-6" />,
-		stripePriceId: getStripePriceId('monthly'),
+		stripePriceId: getStripePriceId("monthly"),
 		features: [
 			"Everything in Free",
 			"Full dashboard access",
@@ -95,7 +101,7 @@ const pricingTiers: PricingTier[] = [
 		icon: <Crown className="h-6 w-6" />,
 		highlighted: true,
 		badge: "BEST VALUE",
-		stripePriceId: getStripePriceId('yearly'),
+		stripePriceId: getStripePriceId("yearly"),
 		features: [
 			"Everything in Monthly",
 			"Save 26% annually",
@@ -112,7 +118,7 @@ const pricingTiers: PricingTier[] = [
 		period: "one-time payment",
 		description: "Lifetime access to all features",
 		icon: <Crown className="h-6 w-6" />,
-		stripePriceId: getStripePriceId('lifetime'),
+		stripePriceId: getStripePriceId("lifetime"),
 		features: [
 			"Everything in Yearly",
 			"Lifetime access",
@@ -153,11 +159,19 @@ function PricingPage() {
 				// Redirect to Stripe Checkout
 				window.location.href = response.url;
 			} else {
-				setError(response.error || response.message || "Failed to create checkout session");
+				setError(
+					response.error ||
+						response.message ||
+						"Failed to create checkout session",
+				);
 			}
 		} catch (err) {
 			console.error("Error creating checkout session:", err);
-			setError(err instanceof Error ? err.message : "Failed to create checkout session");
+			setError(
+				err instanceof Error
+					? err.message
+					: "Failed to create checkout session",
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -207,7 +221,9 @@ function PricingPage() {
 						<div className="flex items-center gap-4">
 							<Crown className="h-8 w-8 text-primary" />
 							<div>
-								<h3 className="font-semibold">Current Plan: {subscription.tier}</h3>
+								<h3 className="font-semibold">
+									Current Plan: {subscription.tier}
+								</h3>
 								<p className="text-sm text-muted-foreground">
 									Thank you for being a premium member!
 								</p>
@@ -242,9 +258,7 @@ function PricingPage() {
 							<div className="flex items-center gap-2 mb-2">
 								<div
 									className={`p-2 rounded-lg ${
-										tier.id === "free"
-											? "bg-green-500/10"
-											: "bg-primary/10"
+										tier.id === "free" ? "bg-green-500/10" : "bg-primary/10"
 									}`}
 								>
 									{tier.icon}
@@ -253,7 +267,9 @@ function PricingPage() {
 							</div>
 							<div className="mb-2">
 								<span className="text-4xl font-bold">{tier.price}</span>
-								<span className="text-muted-foreground ml-2">{tier.period}</span>
+								<span className="text-muted-foreground ml-2">
+									{tier.period}
+								</span>
 							</div>
 							<CardDescription>{tier.description}</CardDescription>
 						</CardHeader>
@@ -279,10 +295,10 @@ function PricingPage() {
 								{loading
 									? "Loading..."
 									: subscription.tier === tier.id
-									? "Current Plan"
-									: tier.id === "free"
-									? "Get Started Free"
-									: `Get ${tier.name}`}
+										? "Current Plan"
+										: tier.id === "free"
+											? "Get Started Free"
+											: `Get ${tier.name}`}
 							</Button>
 						</CardFooter>
 					</Card>
@@ -296,14 +312,14 @@ function PricingPage() {
 						Secure Payment with Stripe
 					</CardTitle>
 					<CardDescription>
-						All payments are processed securely through Stripe. We never store your
-						payment information.
+						All payments are processed securely through Stripe. We never store
+						your payment information.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<p className="text-sm text-muted-foreground">
-						Cancel anytime for monthly and yearly plans. 30-day money-back guarantee
-						for all paid plans.
+						Cancel anytime for monthly and yearly plans. 30-day money-back
+						guarantee for all paid plans.
 					</p>
 				</CardContent>
 			</Card>

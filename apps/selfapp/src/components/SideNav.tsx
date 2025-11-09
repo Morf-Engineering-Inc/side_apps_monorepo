@@ -1,3 +1,12 @@
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
@@ -15,15 +24,6 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 
 type Props = {
 	active?: string;
@@ -51,14 +51,14 @@ const items: {
 		label: "Dashboard",
 		icon: <BarChart3 className="h-4 w-4" />,
 		path: "/",
-		premium: false, // Free tier (basic insights)
+		premium: false, // Available to all tiers
 	},
 	{
 		id: "insights",
 		label: "Insights",
 		icon: <Brain className="h-4 w-4" />,
 		path: "/",
-		premium: false, // Free tier (unlocked per issue #51)
+		premium: false, // Available to all tiers
 	},
 	{
 		id: "integrity",
@@ -267,8 +267,8 @@ export default function SideNav({
 							Premium Feature
 						</DialogTitle>
 						<DialogDescription>
-							Upgrade to Premium to unlock advanced features like identity management,
-							success tracking, and more!
+							Upgrade to Premium to unlock advanced features like identity
+							management, success tracking, and more!
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter className="flex-col sm:flex-row gap-2">
