@@ -8,8 +8,10 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { createStripeCheckoutSession } from "@/lib/api-client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Check, Crown, Lock, Sparkles, Zap } from "lucide-react";
+import { Check, Crown, Lock, Sparkles, X, Zap } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/pricing")({
 	component: PricingPage,
@@ -28,6 +30,8 @@ interface PricingTier {
 	stripePriceId?: string;
 }
 
+// NOTE: Replace these with your actual Stripe Price IDs from your Stripe Dashboard
+// These should be in the format: price_1xxxxxxxxxxxxxxxxxxxxxxxxx
 const pricingTiers: PricingTier[] = [
 	{
 		id: "free",
@@ -50,7 +54,8 @@ const pricingTiers: PricingTier[] = [
 		period: "per month",
 		description: "Full access to all features",
 		icon: <Zap className="h-6 w-6" />,
-		stripePriceId: "price_monthly",
+		// TODO: Replace with actual Stripe Price ID (e.g., price_1Xxxxxxxxxxxxxxxxxxxxxxxx)
+		stripePriceId: import.meta.env.VITE_STRIPE_PRICE_MONTHLY || "price_monthly",
 		features: [
 			"Everything in Free",
 			"Full dashboard access",
@@ -69,7 +74,8 @@ const pricingTiers: PricingTier[] = [
 		icon: <Crown className="h-6 w-6" />,
 		highlighted: true,
 		badge: "BEST VALUE",
-		stripePriceId: "price_yearly",
+		// TODO: Replace with actual Stripe Price ID (e.g., price_1Xxxxxxxxxxxxxxxxxxxxxxxx)
+		stripePriceId: import.meta.env.VITE_STRIPE_PRICE_YEARLY || "price_yearly",
 		features: [
 			"Everything in Monthly",
 			"Save 26% annually",
@@ -86,7 +92,8 @@ const pricingTiers: PricingTier[] = [
 		period: "one-time payment",
 		description: "Lifetime access to all features",
 		icon: <Crown className="h-6 w-6" />,
-		stripePriceId: "price_lifetime",
+		// TODO: Replace with actual Stripe Price ID (e.g., price_1Xxxxxxxxxxxxxxxxxxxxxxxx)
+		stripePriceId: import.meta.env.VITE_STRIPE_PRICE_LIFETIME || "price_lifetime",
 		features: [
 			"Everything in Yearly",
 			"Lifetime access",
@@ -99,8 +106,10 @@ const pricingTiers: PricingTier[] = [
 ];
 
 function PricingPage() {
-	const { subscription, isPremium } = useSubscription();
+	const { subscription, isPremium, refreshSubscription } = useSubscription();
 	const navigate = useNavigate();
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const handleSelectPlan = async (tier: PricingTier) => {
 		if (tier.id === "free") {
@@ -111,39 +120,67 @@ function PricingPage() {
 
 		// For paid plans, redirect to Stripe Checkout
 		try {
-			// TODO: Replace with actual Stripe checkout integration
-			// const response = await fetch('/api/stripe/create-checkout', {
-			//   method: 'POST',
-			//   headers: {
-			//     'Content-Type': 'application/json',
-			//     'Authorization': `Bearer ${token}`,
-			//   },
-			//   body: JSON.stringify({
-			//     priceId: tier.stripePriceId,
-			//     planType: tier.id,
-			//     successUrl: `${window.location.origin}/?payment=success`,
-			//     cancelUrl: `${window.location.origin}/pricing?payment=cancelled`,
-			//   }),
-			// });
-			// const { sessionId } = await response.json();
-			// await stripe.redirectToCheckout({ sessionId });
+			setLoading(true);
+			setError(null);
 
-			// For now, just simulate the upgrade
-			localStorage.setItem("subscriptionTier", tier.id);
-			navigate({ to: "/?payment=success" });
-		} catch (error) {
-			console.error("Error creating checkout session:", error);
+			const response = await createStripeCheckoutSession({
+				priceId: tier.stripePriceId!,
+				planType: tier.id,
+				successUrl: `${window.location.origin}/?payment=success`,
+				cancelUrl: `${window.location.origin}/pricing?payment=cancelled`,
+			});
+
+			if (response.success && response.url) {
+				// Redirect to Stripe Checkout
+				window.location.href = response.url;
+			} else {
+				setError(response.error || response.message || "Failed to create checkout session");
+			}
+		} catch (err) {
+			console.error("Error creating checkout session:", err);
+			setError(err instanceof Error ? err.message : "Failed to create checkout session");
+		} finally {
+			setLoading(false);
 		}
 	};
 
+	const handleClose = () => {
+		navigate({ to: "/" });
+	};
+
 	return (
-		<div className="container mx-auto px-4 py-12 max-w-7xl">
+		<div className="container mx-auto px-4 py-12 max-w-7xl relative">
+			{/* Close button for mobile */}
+			<button
+				onClick={handleClose}
+				className="fixed top-4 right-4 z-50 md:hidden p-2 bg-background border border-border rounded-full shadow-lg hover:bg-accent transition-colors"
+				aria-label="Close pricing"
+			>
+				<X className="h-5 w-5" />
+			</button>
+
 			<div className="text-center mb-12">
 				<h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
 				<p className="text-xl text-muted-foreground">
 					Start your transformation journey today
 				</p>
 			</div>
+
+			{error && (
+				<Card className="mb-8 border-destructive bg-destructive/5">
+					<CardContent className="flex items-center justify-between p-6">
+						<div className="flex items-center gap-4">
+							<div>
+								<h3 className="font-semibold text-destructive">Error</h3>
+								<p className="text-sm text-muted-foreground">{error}</p>
+							</div>
+						</div>
+						<Button variant="outline" onClick={() => setError(null)}>
+							Dismiss
+						</Button>
+					</CardContent>
+				</Card>
+			)}
 
 			{isPremium && (
 				<Card className="mb-8 border-primary bg-primary/5">
@@ -218,9 +255,11 @@ function PricingPage() {
 								className="w-full"
 								variant={tier.highlighted ? "default" : "outline"}
 								onClick={() => handleSelectPlan(tier)}
-								disabled={subscription.tier === tier.id}
+								disabled={subscription.tier === tier.id || loading}
 							>
-								{subscription.tier === tier.id
+								{loading
+									? "Loading..."
+									: subscription.tier === tier.id
 									? "Current Plan"
 									: tier.id === "free"
 									? "Get Started Free"

@@ -58,6 +58,7 @@ const items: {
 		label: "Insights",
 		icon: <Brain className="h-4 w-4" />,
 		path: "/",
+		premium: false, // Free tier (unlocked per issue #51)
 	},
 	{
 		id: "integrity",
@@ -98,13 +99,6 @@ const items: {
 		label: "Self-Reg",
 		icon: <User className="h-4 w-4" />,
 		path: "/selfreg",
-		premium: true, // Premium only
-	},
-	{
-		id: "insights",
-		label: "Insights",
-		icon: <Brain className="h-4 w-4" />,
-		path: "/",
 		premium: true, // Premium only
 	},
 	{

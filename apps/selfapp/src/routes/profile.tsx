@@ -9,9 +9,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Key, Lock, Mail, Shield, User as UserIcon } from "lucide-react";
+import { Crown, Key, Lock, Mail, Shield, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/profile")({
@@ -31,6 +32,7 @@ interface TokenInfo {
 
 function ProfilePage() {
 	const { user, logout, changePassword } = useAuth();
+	const { subscription, isPremium, isAdmin } = useSubscription();
 	const navigate = useNavigate();
 	const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
 	const [showChangePassword, setShowChangePassword] = useState(false);
@@ -91,6 +93,22 @@ function ProfilePage() {
 			setPasswordError(result.error || "Failed to change password");
 		}
 		setPasswordLoading(false);
+	};
+
+	const getSubscriptionLabel = () => {
+		switch (subscription.tier) {
+			case 'admin':
+				return 'Admin (Lifetime Access)';
+			case 'lifetime':
+				return 'Lifetime Premium';
+			case 'yearly':
+				return 'Premium Yearly';
+			case 'monthly':
+				return 'Premium Monthly';
+			case 'free':
+			default:
+				return 'Free';
+		}
 	};
 
 	return (
@@ -175,6 +193,51 @@ function ProfilePage() {
 								</div>
 							</div>
 						)}
+					</div>
+				</CardContent>
+			</Card>
+
+			{/* Subscription Status Card */}
+			<Card className={isPremium || isAdmin ? "border-primary" : ""}>
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<Crown className={`h-5 w-5 ${isPremium || isAdmin ? 'text-primary' : 'text-muted-foreground'}`} />
+						Subscription Status
+					</CardTitle>
+					<CardDescription>
+						Your current plan and benefits
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<div className="flex items-start gap-3">
+						<div className={`p-2 rounded-lg ${isPremium || isAdmin ? 'bg-primary/10' : 'bg-app-surface-alt'}`}>
+							<Crown className={`h-5 w-5 ${isPremium || isAdmin ? 'text-primary' : 'text-muted-foreground'}`} />
+						</div>
+						<div className="flex-1">
+							<p className="text-sm font-medium app-text-subtle">Current Plan</p>
+							<p className="text-lg font-semibold app-text-strong">
+								{getSubscriptionLabel()}
+							</p>
+							{subscription.currentPeriodEnd && subscription.currentPeriodEnd !== 'lifetime' && (
+								<p className="text-xs app-text-muted mt-1">
+									{subscription.status === 'active' ? 'Renews' : 'Expires'} on: {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+								</p>
+							)}
+							{(isAdmin || subscription.tier === 'lifetime') && (
+								<p className="text-xs app-text-muted mt-1">
+									✨ Lifetime access - never expires!
+								</p>
+							)}
+						</div>
+					</div>
+					<div className="pt-4 border-t app-border-default">
+						<Button 
+							onClick={() => navigate({ to: '/pricing' })}
+							variant={isPremium || isAdmin ? 'outline' : 'default'}
+							className="w-full"
+						>
+							{isPremium || isAdmin ? 'Manage Subscription' : 'Upgrade to Premium'}
+						</Button>
 					</div>
 				</CardContent>
 			</Card>

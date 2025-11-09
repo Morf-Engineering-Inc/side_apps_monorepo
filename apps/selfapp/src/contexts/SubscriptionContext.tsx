@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { getSubscriptionStatus } from '@/lib/api-client';
+import { getAuthToken } from '@/lib/auth-integration';
 
 export type SubscriptionTier = 'free' | 'monthly' | 'yearly' | 'lifetime' | 'admin';
 
@@ -31,27 +33,38 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // TODO: Replace with actual API call to get subscription status
-      // const response = await fetch('/api/user/subscription', {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
-      // const data = await response.json();
+      // Check if user is authenticated
+      const token = getAuthToken();
+      if (!token || token === 'local-fallback-token' || token === 'local-dev-token') {
+        // For local dev, check localStorage
+        const storedTier = localStorage.getItem('subscriptionTier') as SubscriptionTier | null;
+        if (storedTier) {
+          setSubscription({
+            tier: storedTier,
+            status: 'active',
+          });
+        }
+        return;
+      }
+
+      // Fetch subscription from API
+      const response = await getSubscriptionStatus();
       
-      // For now, check localStorage for demo purposes
-      const storedTier = localStorage.getItem('subscriptionTier') as SubscriptionTier | null;
-      if (storedTier) {
+      if (response.success) {
         setSubscription({
-          tier: storedTier,
-          status: 'active',
+          tier: response.subscriptionType as SubscriptionTier,
+          status: response.status as 'active' | 'cancelled' | 'expired',
+          stripeCustomerId: response.stripeCustomerId,
+          stripeSubscriptionId: response.stripeSubscriptionId,
+          currentPeriodEnd: response.currentPeriodEnd,
         });
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
-      // Default to free on error
+      // Fall back to localStorage or default to free
+      const storedTier = localStorage.getItem('subscriptionTier') as SubscriptionTier | null;
       setSubscription({
-        tier: 'free',
+        tier: storedTier || 'free',
         status: 'active',
       });
     } finally {

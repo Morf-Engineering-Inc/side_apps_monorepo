@@ -174,3 +174,51 @@ export async function checkHealth(): Promise<{
 	}
 	return response.json();
 }
+
+/**
+ * Get user subscription status
+ */
+export async function getSubscriptionStatus(): Promise<{
+	success: boolean;
+	subscriptionType: string;
+	status: string;
+	stripeCustomerId?: string;
+	stripeSubscriptionId?: string;
+	currentPeriodEnd?: string;
+}> {
+	return apiRequest<{
+		success: boolean;
+		subscriptionType: string;
+		status: string;
+		stripeCustomerId?: string;
+		stripeSubscriptionId?: string;
+		currentPeriodEnd?: string;
+	}>("/api/user/subscription");
+}
+
+/**
+ * Create Stripe checkout session
+ */
+export async function createStripeCheckoutSession(params: {
+	priceId: string;
+	planType: string;
+	successUrl: string;
+	cancelUrl: string;
+}): Promise<{
+	success: boolean;
+	sessionId?: string;
+	url?: string;
+	error?: string;
+	message?: string;
+}> {
+	return apiRequest<{
+		success: boolean;
+		sessionId?: string;
+		url?: string;
+		error?: string;
+		message?: string;
+	}>("/api/stripe/create-checkout", {
+		method: "POST",
+		body: JSON.stringify(params),
+	});
+}
