@@ -32,6 +32,7 @@ export interface BaseEntity {
 export interface DailyLogEntry extends BaseEntity {
 	date: string;
 	goals: string[];
+	goal_tags?: Array<Array<{ key: string; value: string }>> | null;
 	execution_notes?: string | null;
 	tasks?: any[] | null;
 	focus_rating: number;
@@ -129,7 +130,7 @@ async function apiRequest<T>(
 	}
 
 	// Try to get token with automatic refresh
-	let token = await getAuthTokenWithRefresh();
+	const token = await getAuthTokenWithRefresh();
 
 	if (!token) {
 		throw new Error("No authentication token available");

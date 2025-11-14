@@ -1,4 +1,7 @@
 import { IntegrityDashboard } from "@/components/IntegrityDashboard";
+import { TagList } from "@/components/Tag";
+import { TagManagementModal } from "@/components/TagManagementModal";
+import { TagPicker } from "@/components/TagPicker";
 import { TimeTracker } from "@/components/TimeTracker";
 import { Button } from "@/components/ui/button";
 import {
@@ -98,6 +101,9 @@ function Index() {
 function DailyLogForm() {
 	const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 	const [goals, setGoals] = useState(["", "", ""]);
+	const [goalTags, setGoalTags] = useState<
+		Array<Array<{ key: string; value: string }>>
+	>([[], [], []]);
 	const [executionNotes, setExecutionNotes] = useState("");
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [focusRating, setFocusRating] = useState([5]);
@@ -133,6 +139,16 @@ function DailyLogForm() {
 							? existingForDate.goals.slice(0, 3)
 							: [...(existingForDate.goals || []), "", "", ""].slice(0, 3),
 					);
+					setGoalTags(
+						existingForDate.goal_tags?.length >= 3
+							? existingForDate.goal_tags.slice(0, 3)
+							: [
+									...(existingForDate.goal_tags || [[], [], []]),
+									[],
+									[],
+									[],
+								].slice(0, 3),
+					);
 					setExecutionNotes(existingForDate.execution_notes || "");
 					setTasks(existingForDate.tasks || []);
 					setFocusRating([existingForDate.focus_rating || 5]);
@@ -159,6 +175,7 @@ function DailyLogForm() {
 					// Reset form for new entry
 					setExistingEntryId(null);
 					setGoals(["", "", ""]);
+					setGoalTags([[], [], []]);
 					setExecutionNotes("");
 					setTasks([]);
 					setFocusRating([5]);
@@ -185,6 +202,23 @@ function DailyLogForm() {
 		const newGoals = [...goals];
 		newGoals[index] = value;
 		setGoals(newGoals);
+	};
+
+	const handleAddGoalTag = (
+		goalIndex: number,
+		tag: { key: string; value: string },
+	) => {
+		const newGoalTags = [...goalTags];
+		newGoalTags[goalIndex] = [...newGoalTags[goalIndex], tag];
+		setGoalTags(newGoalTags);
+	};
+
+	const handleRemoveGoalTag = (goalIndex: number, tagIndex: number) => {
+		const newGoalTags = [...goalTags];
+		newGoalTags[goalIndex] = newGoalTags[goalIndex].filter(
+			(_, i) => i !== tagIndex,
+		);
+		setGoalTags(newGoalTags);
 	};
 
 	const handleStrengthChange = (index: number, value: string) => {
@@ -243,6 +277,9 @@ function DailyLogForm() {
 			const logEntry = {
 				date,
 				goals,
+				goal_tags: goalTags.some((tags) => tags.length > 0)
+					? goalTags
+					: undefined,
 				execution_notes: executionNotes || undefined,
 				tasks: tasks.length > 0 ? tasks : undefined,
 				focus_rating: focusRating[0],
@@ -327,12 +364,30 @@ function DailyLogForm() {
 				<div className="space-y-4">
 					<Label>Daily Goals (3)</Label>
 					{[0, 1, 2].map((index) => (
-						<Input
-							key={`goal-${index}`}
-							placeholder={`Goal ${index + 1}`}
-							value={goals[index]}
-							onChange={(e) => handleGoalChange(index, e.target.value)}
-						/>
+						<div key={`goal-${index}`} className="space-y-2">
+							<Input
+								placeholder={`Goal ${index + 1}`}
+								value={goals[index]}
+								onChange={(e) => handleGoalChange(index, e.target.value)}
+							/>
+							<div className="flex items-center gap-2">
+								<TagPicker
+									onSelectTag={(tag) => handleAddGoalTag(index, tag)}
+									existingTags={goalTags[index]}
+								/>
+								<TagManagementModal
+									onAddTag={(tag) => handleAddGoalTag(index, tag)}
+								/>
+							</div>
+							{goalTags[index] && goalTags[index].length > 0 && (
+								<TagList
+									tags={goalTags[index]}
+									onRemoveTag={(tagIndex) =>
+										handleRemoveGoalTag(index, tagIndex)
+									}
+								/>
+							)}
+						</div>
 					))}
 				</div>
 

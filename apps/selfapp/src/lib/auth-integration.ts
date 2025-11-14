@@ -2,19 +2,19 @@
  * Standalone Authentication Integration
  *
  * This authentication module implements JWT-based auth for standalone SPA deployment.
- * 
+ *
  * SECURITY ARCHITECTURE:
  * ---------------------
  * Token Storage:
  * - Access tokens (15 min): Stored in MEMORY ONLY (AuthIntegration class state)
  * - Refresh tokens (7 days): Stored in localStorage (compromise for standalone SPA)
- * 
+ *
  * Security Best Practices:
  * - Short-lived access tokens minimize exposure window
  * - Automatic token refresh before expiration (2 min threshold)
  * - Tokens cleared on logout/error
  * - PKCE flow for OAuth (prevents authorization code interception)
- * 
+ *
  * PRODUCTION RECOMMENDATIONS:
  * --------------------------
  * For maximum security in production:
@@ -23,18 +23,18 @@
  * 3. Store refresh tokens in httpOnly secure cookies (not accessible to JS)
  * 4. Set SameSite=Strict on cookies
  * 5. Implement CSRF protection
- * 
+ *
  * Current Limitations:
  * - Refresh tokens in localStorage are vulnerable to XSS attacks
  * - Session doesn't persist across browser restarts without re-authentication
  * - No protection against CSRF for refresh token usage
- * 
+ *
  * Trade-offs:
  * This implementation prioritizes:
  * - Zero backend infrastructure for standalone deployment
  * - Automatic token refresh for better UX
  * - Reasonable security for low-risk applications
- * 
+ *
  * @see https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation
  * @see https://datatracker.ietf.org/doc/html/rfc6749#section-10.3
  */
@@ -246,7 +246,9 @@ class AuthIntegration {
 				}
 
 				const cfg =
-					(window as any).__SELFAPP_COGNITO__ || (window as any).AWS_CONFIG || {};
+					(window as any).__SELFAPP_COGNITO__ ||
+					(window as any).AWS_CONFIG ||
+					{};
 				const userPoolId =
 					cfg.userPoolId || cfg.cognitoUserPoolId || cfg.cognito_user_pool_id;
 				const clientId =
@@ -367,7 +369,7 @@ class AuthIntegration {
 			this.state.refreshToken = refreshToken;
 		}
 		this.state.status = token ? "authenticated" : "unauthenticated";
-		
+
 		// Only persist refresh token to localStorage (access token stays in memory)
 		try {
 			if (typeof window !== "undefined" && window.localStorage) {
